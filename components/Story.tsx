@@ -1,4 +1,5 @@
 import Image from "next/image";
+import type { CSSProperties } from "react";
 import RevealOnScroll from "./RevealOnScroll";
 import { localizePath, type Locale, type SiteDictionary } from "@/lib/i18n";
 
@@ -33,7 +34,8 @@ export default function Story({ locale, copy }: Props) {
             <div className="flex items-center gap-6">
               <a
                 href="tel:+34631751388"
-                className="rounded-full bg-maroon text-cream px-7 py-3.5 text-sm font-semibold font-body hover:bg-maroon-dark transition-colors duration-300"
+                className="masala-btn masala-btn-filled px-7 py-3.5 text-sm font-semibold font-body text-cream"
+                style={{ "--button-fill": "var(--maroon)" } as CSSProperties}
               >
                 {copy.primary}
               </a>

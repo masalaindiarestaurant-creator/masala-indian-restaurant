@@ -70,7 +70,7 @@ export default function MenuPreview({ locale, copy }: Props) {
         <RevealOnScroll className="text-center mt-12">
           <Link
             href={localizePath(locale, "/menu")}
-            className="inline-block rounded-full border border-cream/30 text-cream px-10 py-4 text-sm font-semibold font-body hover:bg-cream/5 hover:border-gold/50 transition-all duration-300"
+            className="masala-btn px-10 py-4 text-sm font-semibold font-body text-cream"
           >
             {copy.viewFull}
           </Link>

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
 import { localizePath, type Locale, type SiteDictionary } from "@/lib/i18n";
 
@@ -11,11 +12,11 @@ type Props = {
 };
 
 const slides = [
-  { src: "/images/food/5.jpg", alt: "Signature Indian dish", position: "center 48%" },
-  { src: "/images/food/14.jpg", alt: "Masala main course", position: "center 42%" },
-  { src: "/images/food/9.jpg", alt: "Tandoori sizzler platter", position: "center 52%" },
-  { src: "/images/visits/10.jpg", alt: "Masala restaurant ambiance", position: "center 58%" },
-  { src: "/images/food/12.jpg", alt: "Aromatic Indian curry", position: "center 46%" },
+  { src: "/images/food/5.jpg", alt: "Signature Indian dish", position: "center 48%", accent: "#f08a0a" },
+  { src: "/images/food/14.jpg", alt: "Masala main course", position: "center 42%", accent: "#d6a73f" },
+  { src: "/images/food/9.jpg", alt: "Tandoori sizzler platter", position: "center 52%", accent: "#c93d24" },
+  { src: "/images/visits/10.jpg", alt: "Masala restaurant ambiance", position: "center 58%", accent: "#91a957" },
+  { src: "/images/food/12.jpg", alt: "Aromatic Indian curry", position: "center 46%", accent: "#e0b55c" },
 ];
 
 export default function Hero({ locale, copy }: Props) {
@@ -30,8 +31,15 @@ export default function Hero({ locale, copy }: Props) {
     return () => clearInterval(timer);
   }, [current]);
 
+  useEffect(() => {
+    document.documentElement.style.setProperty("--ambient-accent", slides[current].accent);
+  }, [current]);
+
   return (
-    <section className="relative flex h-screen min-h-[680px] items-center justify-center overflow-hidden bg-dark">
+    <section
+      className="relative flex h-screen min-h-[680px] items-center justify-center overflow-hidden bg-dark"
+      style={{ "--hero-accent": slides[current].accent } as CSSProperties}
+    >
       {slides.map((slide, i) => (
         <div
           key={slide.src}
@@ -68,18 +76,18 @@ export default function Hero({ locale, copy }: Props) {
             }}
             aria-label={`Go to slide ${i + 1}`}
             className={`h-1 rounded-full transition-all duration-500 ${
-              i === current ? "w-9 bg-saffron" : "w-4 bg-cream/35 hover:bg-cream/65"
+              i === current ? "w-9 bg-[var(--hero-accent)]" : "w-4 bg-cream/35 hover:bg-cream/65"
             }`}
           />
         ))}
       </div>
 
       <div className="relative z-30 mx-auto max-w-5xl px-6 pt-28 text-center lg:pt-32">
-        <p className="section-label mb-5 text-saffron-light">{copy.eyebrow}</p>
+        <p className="section-label mb-5 text-[var(--hero-accent)]">{copy.eyebrow}</p>
 
         <div className="mb-8 flex items-center justify-center gap-4">
           <span className="block h-px w-16 bg-gold/75" />
-          <span className="text-base text-gold-light">✦</span>
+          <span className="text-base text-[var(--hero-accent)]">✦</span>
           <span className="block h-px w-16 bg-gold/75" />
         </div>
 
@@ -93,7 +101,7 @@ export default function Hero({ locale, copy }: Props) {
         >
           {copy.titleTop}
           <br />
-          <em className="not-italic text-gold-light">{copy.titleAccent}</em>
+          <em className="not-italic text-[var(--hero-accent)]">{copy.titleAccent}</em>
         </h1>
 
         <p
@@ -106,13 +114,15 @@ export default function Hero({ locale, copy }: Props) {
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
             href={localizePath(locale, "/menu")}
-            className="min-w-48 rounded-full bg-saffron px-8 py-3.5 text-center text-sm font-semibold text-cream shadow-2xl shadow-black/30 transition hover:bg-saffron-dark focus:outline-none focus:ring-2 focus:ring-saffron/70"
+            className="masala-btn masala-btn-filled min-w-48 px-8 py-3.5 text-center text-sm font-semibold text-cream focus:outline-none focus:ring-2 focus:ring-[var(--hero-accent)]/70"
+            style={{ "--button-fill": "var(--hero-accent)" } as CSSProperties}
           >
             {copy.primary}
           </Link>
           <a
             href="tel:+34631751388"
-            className="min-w-48 rounded-full border border-cream/35 bg-black/35 px-8 py-3.5 text-center text-sm font-semibold text-cream shadow-xl shadow-black/20 backdrop-blur-md transition hover:border-gold/60 hover:bg-cream/10 focus:outline-none focus:ring-2 focus:ring-saffron/70"
+            className="masala-btn min-w-48 bg-black/35 px-8 py-3.5 text-center text-sm font-semibold text-cream backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-[var(--hero-accent)]/70"
+            style={{ "--button-fill": "var(--hero-accent)" } as CSSProperties}
           >
             {copy.secondary}
           </a>
