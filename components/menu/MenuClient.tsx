@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { motion } from "motion/react";
 import type { MenuCategory, SpiceLevel } from "@/data/menu";
 import DishCard from "./DishCard";
 
@@ -19,12 +20,18 @@ export default function MenuClient({ categories, initialCategory, labels }: Prop
   const tabsRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
 
+  const headerScrollOffset = () => {
+    if (typeof window === "undefined") return 140;
+    if (window.matchMedia("(min-width: 1024px)").matches) return 190;
+    if (window.matchMedia("(min-width: 768px)").matches) return 200;
+    return 140;
+  };
+
   const scrollToSection = (id: string) => {
     setActiveId(id);
     const el = sectionRefs.current.get(id);
     if (el) {
-      const offset = 120;
-      const top = el.getBoundingClientRect().top + window.scrollY - offset;
+      const top = el.getBoundingClientRect().top + window.scrollY - headerScrollOffset();
       window.scrollTo({ top, behavior: "smooth" });
     }
   };
@@ -38,7 +45,7 @@ export default function MenuClient({ categories, initialCategory, labels }: Prop
   return (
     <div>
       {/* Sticky tab bar */}
-      <div className="sticky top-[130px] z-40 bg-page/95 border-b border-line shadow-sm backdrop-blur lg:top-[130px]">
+      <div className="sticky top-20 z-40 border-b border-line bg-page/95 shadow-sm backdrop-blur md:top-[136px] lg:top-[132px]">
         <div
           ref={tabsRef}
           className="max-w-7xl mx-auto px-4 lg:px-12 flex gap-0 overflow-x-auto scrollbar-none"
@@ -49,13 +56,20 @@ export default function MenuClient({ categories, initialCategory, labels }: Prop
               key={cat.id}
               data-tab={cat.id}
               onClick={() => scrollToSection(cat.id)}
-              className={`flex-shrink-0 px-4 py-4 text-xs font-semibold font-body border-b-2 transition-all duration-200 whitespace-nowrap ${
+              className={`relative flex-shrink-0 px-4 py-4 text-xs font-semibold font-body border-b-2 transition-all duration-200 whitespace-nowrap ${
                 activeId === cat.id
-                  ? "border-saffron text-saffron"
+                  ? "border-transparent text-saffron"
                   : "border-transparent text-ink-muted hover:text-ink"
               }`}
             >
               {cat.label}
+              {activeId === cat.id && (
+                <motion.span
+                  layoutId="menu-active-tab"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-saffron"
+                  transition={{ type: "spring", stiffness: 340, damping: 30 }}
+                />
+              )}
             </button>
           ))}
         </div>

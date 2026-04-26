@@ -1,4 +1,5 @@
 import Image from "next/image";
+import MotionPressable from "./MotionPressable";
 import RevealOnScroll from "./RevealOnScroll";
 import type { SiteDictionary } from "@/lib/i18n";
 
@@ -54,15 +55,17 @@ export default function CTASection({ copy }: Props) {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-            <a
-              href="tel:+34631751388"
-              className="masala-btn masala-btn-filled group flex items-center gap-3 px-8 py-4 text-sm font-semibold font-body text-cream"
-            >
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 transition-transform duration-300 group-hover:rotate-12">
-                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-              </svg>
-              +34 631 751 388
-            </a>
+            <MotionPressable>
+              <a
+                href="tel:+34631751388"
+                className="masala-btn masala-btn-filled group flex items-center gap-3 px-8 py-4 text-sm font-semibold font-body text-cream"
+              >
+                <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 transition-transform duration-300 group-hover:rotate-12">
+                  <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                </svg>
+                +34 631 751 388
+              </a>
+            </MotionPressable>
 
             <div className="text-cream/50 text-sm font-body">
               {copy.hours}

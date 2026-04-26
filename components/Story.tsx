@@ -1,6 +1,8 @@
 import Image from "next/image";
 import type { CSSProperties } from "react";
+import MotionPressable from "./MotionPressable";
 import RevealOnScroll from "./RevealOnScroll";
+import RouteTransitionLink from "./RouteTransitionLink";
 import { localizePath, type Locale, type SiteDictionary } from "@/lib/i18n";
 
 type Props = {
@@ -32,19 +34,23 @@ export default function Story({ locale, copy }: Props) {
             <p className="text-ink-muted font-body leading-relaxed mb-10">{copy.body2}</p>
 
             <div className="flex items-center gap-6">
-              <a
-                href="tel:+34631751388"
-                className="masala-btn masala-btn-filled px-7 py-3.5 text-sm font-semibold font-body text-cream"
-                style={{ "--button-fill": "var(--maroon)" } as CSSProperties}
-              >
-                {copy.primary}
-              </a>
-              <a
-                href={localizePath(locale, "/menu")}
-                className="text-sm font-semibold font-body text-maroon border-b border-maroon/40 hover:border-maroon transition-colors duration-300 pb-0.5"
-              >
-                {copy.secondary} →
-              </a>
+              <MotionPressable>
+                <a
+                  href="tel:+34631751388"
+                  className="masala-btn masala-btn-filled px-7 py-3.5 text-sm font-semibold font-body text-cream"
+                  style={{ "--button-fill": "var(--maroon)" } as CSSProperties}
+                >
+                  {copy.primary}
+                </a>
+              </MotionPressable>
+              <MotionPressable>
+                <RouteTransitionLink
+                  href={localizePath(locale, "/menu")}
+                  className="text-sm font-semibold font-body text-maroon border-b border-maroon/40 hover:border-maroon transition-colors duration-300 pb-0.5"
+                >
+                  {copy.secondary} →
+                </RouteTransitionLink>
+              </MotionPressable>
             </div>
           </RevealOnScroll>
 
@@ -65,7 +71,7 @@ export default function Story({ locale, copy }: Props) {
 
             {/* Floating accent card */}
             <div className="absolute -bottom-6 -left-6 bg-maroon text-cream p-6 shadow-xl hidden lg:block">
-              <p className="font-heading text-4xl font-semibold text-gold">15+</p>
+              <p className="font-heading text-4xl font-semibold text-gold">€19.95</p>
               <p className="text-sm text-cream/80 font-semibold font-body mt-1">{copy.stat}</p>
             </div>
 

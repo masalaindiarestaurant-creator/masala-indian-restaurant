@@ -1,4 +1,5 @@
 import Image from "next/image";
+import MotionLift from "./MotionLift";
 import RevealOnScroll from "./RevealOnScroll";
 import type { SiteDictionary } from "@/lib/i18n";
 
@@ -39,37 +40,39 @@ export default function FeaturedDishes({ copy }: Props) {
         <div className="grid md:grid-cols-3 gap-8 lg:gap-10">
           {copy.dishes.map((dish, i) => (
             <RevealOnScroll key={dish.name} delay={(i + 1) as 1 | 2 | 3} className="group">
-              {/* Image */}
-              <div className="relative w-full aspect-[3/4] overflow-hidden mb-6 shadow-lg">
-                <Image
-                  src={dish.image}
-                  alt={dish.name}
-                  width={600}
-                  height={800}
-                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  sizes="(max-width: 768px) 100vw, 33vw"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-dark/60 to-transparent" />
+              <MotionLift>
+                {/* Image */}
+                <div className="relative w-full aspect-[3/4] overflow-hidden mb-6 shadow-lg">
+                  <Image
+                    src={dish.image}
+                    alt={dish.name}
+                    width={600}
+                    height={800}
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.08]"
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-dark/60 to-transparent" />
 
-                {/* Tagline badge */}
-                <div className="absolute top-4 left-4 bg-saffron px-3 py-1">
-                  <span className="text-cream text-xs font-semibold font-body">{dish.tagline}</span>
+                  {/* Tagline badge */}
+                  <div className="absolute top-4 left-4 bg-saffron px-3 py-1">
+                    <span className="text-cream text-xs font-semibold font-body">{dish.tagline}</span>
+                  </div>
+
+                  {/* Price */}
+                  <div className="absolute bottom-4 right-4">
+                    <span className="font-heading text-2xl text-gold font-semibold">{dish.price}</span>
+                  </div>
                 </div>
 
-                {/* Price */}
-                <div className="absolute bottom-4 right-4">
-                  <span className="font-heading text-2xl text-gold font-semibold">{dish.price}</span>
+                {/* Info */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-heading text-2xl text-ink font-semibold">{dish.name}</h3>
+                    <SpiceDots level={dish.spice} />
+                  </div>
+                  <p className="text-ink-muted text-sm font-body leading-relaxed">{dish.description}</p>
                 </div>
-              </div>
-
-              {/* Info */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-heading text-2xl text-ink font-semibold">{dish.name}</h3>
-                  <SpiceDots level={dish.spice} />
-                </div>
-                <p className="text-ink-muted text-sm font-body leading-relaxed">{dish.description}</p>
-              </div>
+              </MotionLift>
             </RevealOnScroll>
           ))}
         </div>

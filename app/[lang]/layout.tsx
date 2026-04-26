@@ -1,3 +1,4 @@
+import { ViewTransition } from "react";
 import { notFound } from "next/navigation";
 import { isLocale, locales } from "@/lib/i18n";
 
@@ -15,5 +16,21 @@ export default async function LocaleLayout({
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
-  return children;
+  return (
+    <ViewTransition
+      enter={{
+        "masala-forward": "masala-forward",
+        "masala-back": "masala-back",
+        default: "none",
+      }}
+      exit={{
+        "masala-forward": "masala-forward",
+        "masala-back": "masala-back",
+        default: "none",
+      }}
+      default="none"
+    >
+      {children}
+    </ViewTransition>
+  );
 }

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import RouteTransitionLink from "./RouteTransitionLink";
 import { localizePath, type Locale, type SiteDictionary } from "@/lib/i18n";
 
 type Props = {
@@ -16,11 +16,12 @@ export default function Footer({ locale, copy, nav, brand }: Props) {
     { href: "#contact", label: nav.contact },
   ];
   const menuLinks = [
+    { href: "/menu#special-menu", label: copy.links.special },
     { href: "/menu#starters", label: copy.links.starters },
     { href: "/menu#tandoori", label: copy.links.tandoori },
     { href: "/menu#mains", label: copy.links.mains },
     { href: "/menu#chef-specials", label: copy.links.chef },
-    { href: "/menu#drinks", label: copy.links.drinks },
+    { href: "/menu#soft-drinks", label: copy.links.drinks },
   ];
 
   return (
@@ -77,12 +78,12 @@ export default function Footer({ locale, copy, nav, brand }: Props) {
             <ul className="space-y-3">
               {navLinks.map((l) => (
                 <li key={l.href}>
-                  <Link
+                  <RouteTransitionLink
                     href={localizePath(locale, l.href)}
                     className="text-cream/60 text-sm font-body hover:text-saffron transition-colors duration-200"
                   >
                     {l.label}
-                  </Link>
+                  </RouteTransitionLink>
                 </li>
               ))}
             </ul>
@@ -94,12 +95,12 @@ export default function Footer({ locale, copy, nav, brand }: Props) {
             <ul className="space-y-3">
               {menuLinks.map((l) => (
                 <li key={l.href}>
-                  <Link
+                  <RouteTransitionLink
                     href={localizePath(locale, l.href)}
                     className="text-cream/60 text-sm font-body hover:text-saffron transition-colors duration-200"
                   >
                     {l.label}
-                  </Link>
+                  </RouteTransitionLink>
                 </li>
               ))}
             </ul>
@@ -122,8 +123,9 @@ export default function Footer({ locale, copy, nav, brand }: Props) {
               </div>
               <div>
                 <p className="text-cream/40 text-xs font-semibold mb-1">{copy.hours}</p>
-                <p>Mon - Sun</p>
-                <p>12:00 - 23:00</p>
+                <a href="tel:+34631751388" className="hover:text-saffron transition-colors duration-200">
+                  +34 631 751 388
+                </a>
               </div>
             </div>
           </div>

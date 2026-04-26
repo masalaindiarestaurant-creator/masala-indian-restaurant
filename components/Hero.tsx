@@ -1,9 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
+import { motion, useReducedMotion, type Variants } from "motion/react";
+import MotionPressable from "./MotionPressable";
+import RouteTransitionLink from "./RouteTransitionLink";
 import { localizePath, type Locale, type SiteDictionary } from "@/lib/i18n";
 
 type Props = {
@@ -19,9 +21,30 @@ const slides = [
   { src: "/images/hero-banner/curry-karahi.png", alt: "Aromatic Indian curry", position: "center 46%", accent: "#e0b55c" },
 ];
 
+const heroContainer: Variants = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.13,
+      delayChildren: 0.26,
+    },
+  },
+};
+
+const heroItem: Variants = {
+  hidden: { opacity: 0, y: 28, filter: "blur(10px)" },
+  show: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.82, ease: [0.2, 0.82, 0.22, 1] as const },
+  },
+};
+
 export default function Hero({ locale, copy }: Props) {
   const [current, setCurrent] = useState(0);
   const [prev, setPrev] = useState<number | null>(null);
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -42,11 +65,19 @@ export default function Hero({ locale, copy }: Props) {
       style={{ "--hero-accent": slides[current].accent } as CSSProperties}
     >
       {slides.map((slide, i) => (
-        <div
+        <motion.div
           key={slide.src}
-          className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
+          className="absolute inset-0"
+          initial={false}
+          animate={{
+            opacity: i === current ? 1 : 0,
+            scale: reducedMotion ? 1 : i === current ? 1.085 : 1.035,
+          }}
+          transition={{
+            opacity: { duration: 1.05, ease: "easeInOut" },
+            scale: { duration: 6.2, ease: "easeOut" },
+          }}
           style={{
-            opacity: i === current ? 1 : i === prev ? 0 : 0,
             zIndex: i === current ? 1 : i === prev ? 0 : -1,
           }}
         >
@@ -55,11 +86,11 @@ export default function Hero({ locale, copy }: Props) {
             alt={slide.alt}
             fill
             priority={i === 0}
-            className="scale-[1.04] object-cover"
+            className="object-cover"
             style={{ objectPosition: slide.position }}
             sizes="100vw"
           />
-        </div>
+        </motion.div>
       ))}
 
       <div className="absolute inset-0 z-10 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.18)_0%,rgba(0,0,0,0.56)_52%,rgba(0,0,0,0.86)_100%)]" />
@@ -68,7 +99,7 @@ export default function Hero({ locale, copy }: Props) {
 
       <div className="absolute bottom-24 left-1/2 z-30 flex -translate-x-1/2 gap-2">
         {slides.map((_, i) => (
-          <button
+          <motion.button
             key={i}
             type="button"
             onClick={() => {
@@ -76,6 +107,8 @@ export default function Hero({ locale, copy }: Props) {
               setCurrent(i);
             }}
             aria-label={`Go to slide ${i + 1}`}
+            whileHover={{ scaleY: 1.4 }}
+            whileTap={{ scale: 0.9 }}
             className={`h-1 rounded-full transition-all duration-500 ${
               i === current ? "w-9 bg-[var(--hero-accent)]" : "w-4 bg-cream/35 hover:bg-cream/65"
             }`}
@@ -83,16 +116,40 @@ export default function Hero({ locale, copy }: Props) {
         ))}
       </div>
 
-      <div className="relative z-30 mx-auto max-w-5xl px-6 pt-28 text-center lg:pt-32">
-        <p className="section-label mb-5 text-[var(--hero-accent)]">{copy.eyebrow}</p>
+      <motion.div
+        variants={heroContainer}
+        initial="hidden"
+        animate="show"
+        className="relative z-30 mx-auto max-w-5xl px-6 pt-28 text-center lg:pt-32"
+      >
+        <motion.p variants={heroItem} className="section-label mb-5 text-[var(--hero-accent)]">
+          {copy.eyebrow}
+        </motion.p>
 
-        <div className="mb-8 flex items-center justify-center gap-4">
-          <span className="block h-px w-16 bg-gold/75" />
-          <span className="text-base text-[var(--hero-accent)]">✦</span>
-          <span className="block h-px w-16 bg-gold/75" />
-        </div>
+        <motion.div variants={heroItem} className="mb-8 flex items-center justify-center gap-4">
+          <motion.span
+            className="block h-px w-16 origin-right bg-gold/75"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 0.72, ease: [0.2, 0.82, 0.22, 1], delay: 0.46 }}
+          />
+          <motion.span
+            className="text-base text-[var(--hero-accent)]"
+            animate={reducedMotion ? undefined : { rotate: [0, 18, -12, 0], scale: [1, 1.18, 1] }}
+            transition={{ duration: 1.5, delay: 0.58, ease: "easeOut" }}
+          >
+            ✦
+          </motion.span>
+          <motion.span
+            className="block h-px w-16 origin-left bg-gold/75"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 0.72, ease: [0.2, 0.82, 0.22, 1], delay: 0.46 }}
+          />
+        </motion.div>
 
-        <h1
+        <motion.h1
+          variants={heroItem}
           className="font-heading mb-6 text-cream"
           style={{
             fontSize: "clamp(3.4rem, 8vw, 7.4rem)",
@@ -103,32 +160,37 @@ export default function Hero({ locale, copy }: Props) {
           {copy.titleTop}
           <br />
           <em className="not-italic text-[var(--hero-accent)]">{copy.titleAccent}</em>
-        </h1>
+        </motion.h1>
 
-        <p
+        <motion.p
+          variants={heroItem}
           className="mx-auto mb-10 max-w-2xl text-lg font-medium leading-8 text-cream/92"
           style={{ textShadow: "0 2px 18px rgba(0,0,0,0.82)" }}
         >
           {copy.body}
-        </p>
+        </motion.p>
 
-        <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <Link
-            href={localizePath(locale, "/menu")}
-            className="masala-btn masala-btn-filled min-w-48 px-8 py-3.5 text-center text-sm font-semibold text-cream focus:outline-none focus:ring-2 focus:ring-[var(--hero-accent)]/70"
-            style={{ "--button-fill": "var(--hero-accent)" } as CSSProperties}
-          >
-            {copy.primary}
-          </Link>
-          <a
-            href="tel:+34631751388"
-            className="masala-btn min-w-48 bg-black/35 px-8 py-3.5 text-center text-sm font-semibold text-cream backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-[var(--hero-accent)]/70"
-            style={{ "--button-fill": "var(--hero-accent)" } as CSSProperties}
-          >
-            {copy.secondary}
-          </a>
-        </div>
-      </div>
+        <motion.div variants={heroItem} className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <MotionPressable>
+            <RouteTransitionLink
+              href={localizePath(locale, "/menu")}
+              className="masala-btn masala-btn-filled min-w-48 px-8 py-3.5 text-center text-sm font-semibold text-cream focus:outline-none focus:ring-2 focus:ring-[var(--hero-accent)]/70"
+              style={{ "--button-fill": "var(--hero-accent)" } as CSSProperties}
+            >
+              {copy.primary}
+            </RouteTransitionLink>
+          </MotionPressable>
+          <MotionPressable>
+            <a
+              href="tel:+34631751388"
+              className="masala-btn min-w-48 bg-black/35 px-8 py-3.5 text-center text-sm font-semibold text-cream backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-[var(--hero-accent)]/70"
+              style={{ "--button-fill": "var(--hero-accent)" } as CSSProperties}
+            >
+              {copy.secondary}
+            </a>
+          </MotionPressable>
+        </motion.div>
+      </motion.div>
 
       <div className="absolute bottom-9 left-1/2 z-30 flex -translate-x-1/2 flex-col items-center gap-2">
         <span className="text-xs font-semibold tracking-[0.18em] text-cream/60">{copy.scroll}</span>

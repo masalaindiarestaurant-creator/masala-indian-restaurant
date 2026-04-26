@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { motion } from "motion/react";
+import RouteTransitionLink from "./RouteTransitionLink";
 import {
   languageLabels,
   locales,
@@ -161,22 +163,38 @@ export default function Navbar({ locale, copy, brand }: Props) {
     section: menuLink.section,
   };
 
+  useEffect(() => {
+    if (!mobileOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [mobileOpen]);
+
   return (
-    <header
-      className={`fixed left-0 right-0 top-0 z-50 transition-all duration-500 ${
-        scrolled ? "bg-dark/92 shadow-2xl shadow-black/20 backdrop-blur-xl" : "bg-gradient-to-b from-black/75 via-black/35 to-transparent"
-      }`}
-    >
-      <div className="mx-auto max-w-7xl px-5 lg:px-12">
-        <div className="flex h-20 items-center justify-between gap-5 border-b border-cream/10 lg:h-[76px]">
-          <Link href={localizePath(locale, "/")} className="group flex flex-col leading-none">
-            <span className="font-heading text-[1.95rem] font-normal tracking-[0.08em] text-cream transition-colors group-hover:text-gold-light">
-              {brand.name}
-            </span>
-            <span className="mt-1 text-[0.68rem] font-semibold tracking-[0.18em] text-saffron-light">
-              {brand.descriptor}
-            </span>
-          </Link>
+    <>
+      <motion.header
+        style={{ viewTransitionName: "site-header" }}
+        initial={{ y: -28, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.7, ease: [0.2, 0.82, 0.22, 1], delay: 0.12 }}
+        className={`fixed left-0 right-0 top-0 z-50 transition-all duration-500 ${
+          scrolled || mobileOpen ? "bg-dark/92 shadow-2xl shadow-black/20 backdrop-blur-xl" : "bg-gradient-to-b from-black/75 via-black/35 to-transparent"
+        }`}
+      >
+        <div className="mx-auto max-w-7xl px-5 lg:px-12">
+          <div className="flex h-20 items-center justify-between gap-5 border-b border-cream/10 lg:h-[76px]">
+            <RouteTransitionLink href={localizePath(locale, "/")} className="group flex flex-col leading-none">
+              <span className="font-heading text-[1.95rem] font-normal tracking-[0.08em] text-cream transition-colors group-hover:text-gold-light">
+                {brand.name}
+              </span>
+              <span className="mt-1 text-[0.68rem] font-semibold tracking-[0.18em] text-saffron-light">
+                {brand.descriptor}
+              </span>
+            </RouteTransitionLink>
 
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="relative z-[90]">
@@ -262,10 +280,15 @@ export default function Navbar({ locale, copy, brand }: Props) {
 
             <button
               type="button"
-              onClick={() => setMobileOpen((open) => !open)}
+              onClick={() => {
+                setLanguageOpen(false);
+                setThemeOpen(false);
+                setMobileOpen((open) => !open);
+              }}
               className="flex h-11 w-11 flex-col items-center justify-center gap-1.5 bg-transparent text-cream transition hover:text-[var(--ambient-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--ambient-accent)]/55 md:hidden"
               aria-label={copy.toggle}
               aria-expanded={mobileOpen}
+              aria-controls="mobile-navigation"
             >
               <span className={`block h-0.5 w-5 bg-current transition ${mobileOpen ? "translate-y-2 rotate-45" : ""}`} />
               <span className={`block h-0.5 w-5 bg-current transition ${mobileOpen ? "opacity-0" : ""}`} />
@@ -277,24 +300,24 @@ export default function Navbar({ locale, copy, brand }: Props) {
         <div className="hidden h-14 items-center justify-between md:flex">
           <div className="flex items-center gap-5 lg:gap-8">
             {navLinks.map((link) => (
-              <Link
+              <RouteTransitionLink
                 key={link.href}
                 href={link.href}
                 data-active={activeSection === link.section}
                 className="masala-nav-link py-2 text-[0.78rem] font-bold uppercase tracking-[0.16em] text-cream/68 transition hover:text-cream data-[active=true]:text-cream"
               >
                 {link.label}
-              </Link>
+              </RouteTransitionLink>
             ))}
             <span className="mx-1 h-5 w-px bg-cream/18" aria-hidden="true" />
-            <Link
+            <RouteTransitionLink
               href={fullMenuLink.href}
               data-active={activeSection === fullMenuLink.section}
               className="masala-nav-link flex items-center gap-2 py-2 text-[0.78rem] font-bold uppercase tracking-[0.16em] text-saffron-light/86 transition hover:text-saffron-light data-[active=true]:text-saffron-light"
             >
               <MenuMark />
               <span>{fullMenuLink.label}</span>
-            </Link>
+            </RouteTransitionLink>
           </div>
           <a
             href="tel:+34631751388"
@@ -305,37 +328,56 @@ export default function Navbar({ locale, copy, brand }: Props) {
         </div>
       </div>
 
-      <div className={`overflow-hidden border-t border-cream/10 bg-dark/96 transition-all duration-300 md:hidden ${mobileOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}>
-        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-5 py-5">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
+      </motion.header>
+
+      <div
+        id="mobile-navigation"
+        className={`fixed inset-x-0 bottom-0 top-20 z-40 overflow-y-auto border-t border-cream/10 bg-dark/98 transition duration-300 md:hidden ${
+          mobileOpen ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none -translate-y-3 opacity-0"
+        }`}
+      >
+        <div className="mx-auto flex min-h-full max-w-7xl flex-col px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-6">
+          <nav className="flex flex-col gap-2" aria-label={copy.toggle}>
+            {navLinks.map((link) => {
+              const active = activeSection === link.section;
+
+              return (
+                <RouteTransitionLink
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  data-active={active}
+                  aria-current={active ? "location" : undefined}
+                  className="masala-mobile-nav-link px-4 py-4 text-base font-bold uppercase text-cream/82 transition hover:text-cream data-[active=true]:text-cream"
+                >
+                  <span>{link.label}</span>
+                </RouteTransitionLink>
+              );
+            })}
+            <span className="my-3 h-px w-full bg-cream/12" aria-hidden="true" />
+            <RouteTransitionLink
+              href={fullMenuLink.href}
               onClick={() => setMobileOpen(false)}
-              data-active={activeSection === link.section}
-              className="masala-nav-link w-fit px-1 py-3 text-sm font-bold uppercase tracking-[0.14em] text-cream/82 transition hover:text-cream data-[active=true]:text-cream"
+              data-active={activeSection === fullMenuLink.section}
+              aria-current={activeSection === fullMenuLink.section ? "page" : undefined}
+              className="masala-mobile-nav-link flex items-center gap-3 px-4 py-4 text-base font-bold uppercase text-saffron-light/90 transition hover:text-saffron-light data-[active=true]:text-saffron-light"
             >
-              {link.label}
-            </Link>
-          ))}
-          <span className="my-1 h-px w-full bg-cream/12" aria-hidden="true" />
-          <Link
-            href={fullMenuLink.href}
-            onClick={() => setMobileOpen(false)}
-            data-active={activeSection === fullMenuLink.section}
-            className="masala-nav-link flex w-fit items-center gap-2 px-1 py-3 text-sm font-bold uppercase tracking-[0.14em] text-saffron-light/86 transition hover:text-saffron-light data-[active=true]:text-saffron-light"
-          >
-            <MenuMark />
-            <span>{fullMenuLink.label}</span>
-          </Link>
-          <a
-            href="tel:+34631751388"
-            className="masala-btn masala-btn-filled mt-2 px-5 py-3 text-center text-sm font-semibold text-cream"
-          >
-            {copy.reserve}
-          </a>
+              <MenuMark />
+              <span>{fullMenuLink.label}</span>
+            </RouteTransitionLink>
+          </nav>
+
+          <div className="mt-auto pt-8">
+            <a
+              href="tel:+34631751388"
+              onClick={() => setMobileOpen(false)}
+              className="masala-btn masala-btn-filled w-full px-5 py-4 text-center text-sm font-semibold text-cream"
+            >
+              {copy.reserve}
+            </a>
+          </div>
         </div>
       </div>
-    </header>
+    </>
   );
 }

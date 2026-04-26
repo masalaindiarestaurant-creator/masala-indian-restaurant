@@ -5,7 +5,17 @@ import type { SiteDictionary } from "@/lib/i18n";
 
 type Props = { stats: SiteDictionary["stats"] };
 
-function Counter({ target, suffix }: { target: number; suffix: string }) {
+function Counter({
+  target,
+  suffix,
+  prefix,
+  displayValue,
+}: {
+  target: number;
+  suffix: string;
+  prefix?: string;
+  displayValue?: string;
+}) {
   const [count, setCount] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
   const started = useRef(false);
@@ -36,8 +46,13 @@ function Counter({ target, suffix }: { target: number; suffix: string }) {
 
   return (
     <span ref={ref} className="font-heading text-5xl lg:text-6xl font-semibold text-gold tabular-nums">
-      {count}
-      {suffix}
+      {displayValue ?? (
+        <>
+          {prefix}
+          {count}
+          {suffix}
+        </>
+      )}
     </span>
   );
 }
@@ -56,7 +71,7 @@ export default function StatsBar({ stats }: Props) {
                 i < 2 ? "first:pt-0 [&:nth-child(2)]:pt-0" : ""
               }`}
             >
-              <Counter target={s.value} suffix={s.suffix} />
+              <Counter target={s.value} suffix={s.suffix} prefix={s.prefix} displayValue={s.displayValue} />
               <span className="section-label text-cream/60 mt-1">{s.label}</span>
             </div>
           ))}

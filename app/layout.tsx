@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Marcellus } from "next/font/google";
+import EntryTransition from "@/components/EntryTransition";
+import MotionProvider from "@/components/MotionProvider";
 import "./globals.css";
 
 const marcellus = Marcellus({
@@ -12,14 +14,14 @@ const marcellus = Marcellus({
 export const metadata: Metadata = {
   title: "Masala Indian Restaurant | Authentic Indian Cuisine",
   description:
-    "Experience authentic Indian flavours at Masala Indian Restaurant. Traditional recipes, freshest ingredients, warm hospitality.",
+    "Experience authentic Indian flavours at Masala Indian Restaurant with tandoori dishes, curries, vegetarian choices and a full drinks menu.",
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={marcellus.variable}>
+    <html lang="en" className={marcellus.variable} data-scroll-behavior="smooth">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -28,7 +30,12 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="bg-page text-ink font-body antialiased">{children}</body>
+      <body className="bg-page text-ink font-body antialiased">
+        <MotionProvider>
+          <EntryTransition />
+          {children}
+        </MotionProvider>
+      </body>
     </html>
   );
 }

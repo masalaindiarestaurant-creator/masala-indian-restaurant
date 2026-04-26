@@ -1,6 +1,8 @@
 import Image from "next/image";
-import Link from "next/link";
+import MotionLift from "./MotionLift";
+import MotionPressable from "./MotionPressable";
 import RevealOnScroll from "./RevealOnScroll";
+import RouteTransitionLink from "./RouteTransitionLink";
 import { localizePath, type Locale, type SiteDictionary } from "@/lib/i18n";
 
 type Props = {
@@ -30,51 +32,55 @@ export default function MenuPreview({ locale, copy }: Props) {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
           {copy.categories.map((cat, i) => (
             <RevealOnScroll key={cat.id} delay={(i % 4) as 0 | 1 | 2 | 3 | 4}>
-              <Link
-                href={localizePath(locale, `/menu#${cat.id}`)}
-                className="group relative block w-full aspect-[3/4] overflow-hidden"
-              >
-                <Image
-                  src={cat.image}
-                  alt={cat.label}
-                  width={600}
-                  height={800}
-                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  sizes="(max-width: 768px) 50vw, 25vw"
-                />
-                {/* Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-dark/80 via-dark/20 to-transparent transition-opacity duration-300 group-hover:from-maroon/80" />
+              <MotionLift>
+                <RouteTransitionLink
+                  href={localizePath(locale, `/menu#${cat.id}`)}
+                  className="group relative block w-full aspect-[3/4] overflow-hidden"
+                >
+                  <Image
+                    src={cat.image}
+                    alt={cat.label}
+                    width={600}
+                    height={800}
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                  />
+                  {/* Gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-dark/80 via-dark/20 to-transparent transition-opacity duration-300 group-hover:from-maroon/80" />
 
-                {/* Content */}
-                <div className="absolute bottom-0 left-0 right-0 p-5">
-                  <p className="text-saffron-light text-xs font-semibold font-body mb-1">
-                    {cat.tagline}
-                  </p>
-                  <h3 className="font-heading text-cream text-xl font-semibold mb-3">
-                    {cat.label}
-                  </h3>
-                  <span className="inline-flex items-center gap-2 text-cream/70 text-xs font-semibold font-body group-hover:text-gold transition-colors duration-300">
-                    {copy.viewMenu}
-                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 transition-transform duration-300 group-hover:translate-x-1">
-                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </span>
-                </div>
+                  {/* Content */}
+                  <div className="absolute bottom-0 left-0 right-0 p-5">
+                    <p className="text-saffron-light text-xs font-semibold font-body mb-1">
+                      {cat.tagline}
+                    </p>
+                    <h3 className="font-heading text-cream text-xl font-semibold mb-3">
+                      {cat.label}
+                    </h3>
+                    <span className="inline-flex items-center gap-2 text-cream/70 text-xs font-semibold font-body group-hover:text-gold transition-colors duration-300">
+                      {copy.viewMenu}
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 transition-transform duration-300 group-hover:translate-x-1">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </span>
+                  </div>
 
-                {/* Gold border on hover */}
-                <div className="absolute inset-0 border border-gold/0 group-hover:border-gold/40 transition-all duration-500 pointer-events-none" />
-              </Link>
+                  {/* Gold border on hover */}
+                  <div className="absolute inset-0 border border-gold/0 group-hover:border-gold/40 transition-all duration-500 pointer-events-none" />
+                </RouteTransitionLink>
+              </MotionLift>
             </RevealOnScroll>
           ))}
         </div>
 
         <RevealOnScroll className="text-center mt-12">
-          <Link
-            href={localizePath(locale, "/menu")}
-            className="masala-btn px-10 py-4 text-sm font-semibold font-body text-cream"
-          >
-            {copy.viewFull}
-          </Link>
+          <MotionPressable>
+            <RouteTransitionLink
+              href={localizePath(locale, "/menu")}
+              className="masala-btn px-10 py-4 text-sm font-semibold font-body text-cream"
+            >
+              {copy.viewFull}
+            </RouteTransitionLink>
+          </MotionPressable>
         </RevealOnScroll>
       </div>
     </section>
