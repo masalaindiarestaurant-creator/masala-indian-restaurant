@@ -54,6 +54,10 @@ export type SiteDictionary = {
     menu: string;
     about: string;
     contact: string;
+    story: string;
+    signature: string;
+    preview: string;
+    menuLink: string;
     reserve: string;
     toggle: string;
     language: string;
@@ -165,6 +169,10 @@ export const dictionaries: Record<Locale, SiteDictionary> = {
       menu: "Menu",
       about: "About",
       contact: "Contact",
+      story: "Story",
+      signature: "Dishes",
+      preview: "Gallery",
+      menuLink: "Menu",
       reserve: "Reserve a Table",
       toggle: "Toggle menu",
       language: "Change language",
@@ -232,10 +240,10 @@ export const dictionaries: Record<Locale, SiteDictionary> = {
       viewMenu: "View Menu",
       viewFull: "View Full Menu",
       categories: [
-        { id: "starters", label: "Starters", tagline: "Light and vibrant", image: "/images/food/1.jpeg" },
-        { id: "tandoori", label: "Tandoori", tagline: "From the clay oven", image: "/images/food/2.jpeg" },
+        { id: "starters", label: "Starters", tagline: "Light and vibrant", image: "/images/food/11.jpg" },
+        { id: "tandoori", label: "Tandoori", tagline: "From the clay oven", image: "/images/food/9.jpg" },
         { id: "mains", label: "Main Courses", tagline: "Hearty and aromatic", image: "/images/food/8.jpg" },
-        { id: "drinks", label: "Drinks", tagline: "Lassi to cocktails", image: "/images/food/6.jpg" },
+        { id: "drinks", label: "Drinks", tagline: "Lassi to cocktails", image: "/images/food/drink.png" },
       ],
     },
     gallery: { eyebrow: "Our World", title: "A Feast for", accent: "the Eyes" },
@@ -320,6 +328,10 @@ export const dictionaries: Record<Locale, SiteDictionary> = {
       menu: "Menu",
       about: "Over ons",
       contact: "Contact",
+      story: "Verhaal",
+      signature: "Gerechten",
+      preview: "Galerij",
+      menuLink: "Menu",
       reserve: "Reserveer een tafel",
       toggle: "Menu openen",
       language: "Taal wijzigen",
@@ -366,10 +378,10 @@ export const dictionaries: Record<Locale, SiteDictionary> = {
       viewMenu: "Bekijk Menu",
       viewFull: "Bekijk Volledig Menu",
       categories: [
-        { id: "starters", label: "Voorgerechten", tagline: "Licht en levendig", image: "/images/food/1.jpeg" },
-        { id: "tandoori", label: "Tandoori", tagline: "Uit de kleioven", image: "/images/food/2.jpeg" },
+        { id: "starters", label: "Voorgerechten", tagline: "Licht en levendig", image: "/images/food/11.jpg" },
+        { id: "tandoori", label: "Tandoori", tagline: "Uit de kleioven", image: "/images/food/9.jpg" },
         { id: "mains", label: "Hoofdgerechten", tagline: "Hartverwarmend en aromatisch", image: "/images/food/8.jpg" },
-        { id: "drinks", label: "Drankjes", tagline: "Van lassi tot cocktails", image: "/images/food/6.jpg" },
+        { id: "drinks", label: "Drankjes", tagline: "Van lassi tot cocktails", image: "/images/food/drink.png" },
       ],
     },
     gallery: { eyebrow: "Onze Wereld", title: "Een Feest voor", accent: "het Oog" },
@@ -423,7 +435,7 @@ export const dictionaries: Record<Locale, SiteDictionary> = {
       menuDescription: "Explora nuestro menu completo de entrantes indios, tandoori, platos principales, biryanis, postres y bebidas.",
     },
     brand: { name: "Masala", descriptor: "Indian Restaurant" },
-    nav: { home: "Inicio", menu: "Menu", about: "Nosotros", contact: "Contacto", reserve: "Reservar mesa", toggle: "Abrir menu", language: "Cambiar idioma" },
+    nav: { home: "Inicio", menu: "Menu", about: "Nosotros", contact: "Contacto", story: "Historia", signature: "Platos", preview: "Galeria", menuLink: "Menu", reserve: "Reservar mesa", toggle: "Abrir menu", language: "Cambiar idioma" },
     hero: {
       eyebrow: "Cocina India Autentica",
       titleTop: "Prueba el",
@@ -466,10 +478,10 @@ export const dictionaries: Record<Locale, SiteDictionary> = {
       viewMenu: "Ver Menu",
       viewFull: "Ver Menu Completo",
       categories: [
-        { id: "starters", label: "Entrantes", tagline: "Ligeros y vivos", image: "/images/food/1.jpeg" },
-        { id: "tandoori", label: "Tandoori", tagline: "Del horno de barro", image: "/images/food/2.jpeg" },
+        { id: "starters", label: "Entrantes", tagline: "Ligeros y vivos", image: "/images/food/11.jpg" },
+        { id: "tandoori", label: "Tandoori", tagline: "Del horno de barro", image: "/images/food/9.jpg" },
         { id: "mains", label: "Principales", tagline: "Intensos y aromaticos", image: "/images/food/8.jpg" },
-        { id: "drinks", label: "Bebidas", tagline: "De lassi a cocteles", image: "/images/food/6.jpg" },
+        { id: "drinks", label: "Bebidas", tagline: "De lassi a cocteles", image: "/images/food/drink.png" },
       ],
     },
     gallery: { eyebrow: "Nuestro Mundo", title: "Un Festin para", accent: "la Vista" },
@@ -523,7 +535,7 @@ export const dictionaries: Record<Locale, SiteDictionary> = {
       menuDescription: "Explorez notre menu complet: entrees indiennes, tandoori, plats, biryanis, desserts et boissons.",
     },
     brand: { name: "Masala", descriptor: "Indian Restaurant" },
-    nav: { home: "Accueil", menu: "Menu", about: "A propos", contact: "Contact", reserve: "Reserver une table", toggle: "Ouvrir le menu", language: "Changer de langue" },
+    nav: { home: "Accueil", menu: "Menu", about: "A propos", contact: "Contact", story: "Histoire", signature: "Plats", preview: "Galerie", menuLink: "Menu", reserve: "Reserver une table", toggle: "Ouvrir le menu", language: "Changer de langue" },
     hero: {
       eyebrow: "Cuisine Indienne Authentique",
       titleTop: "Goutez",
@@ -566,10 +578,10 @@ export const dictionaries: Record<Locale, SiteDictionary> = {
       viewMenu: "Voir le Menu",
       viewFull: "Voir Tout le Menu",
       categories: [
-        { id: "starters", label: "Entrees", tagline: "Legeres et vives", image: "/images/food/1.jpeg" },
-        { id: "tandoori", label: "Tandoori", tagline: "Du four d'argile", image: "/images/food/2.jpeg" },
+        { id: "starters", label: "Entrees", tagline: "Legeres et vives", image: "/images/food/11.jpg" },
+        { id: "tandoori", label: "Tandoori", tagline: "Du four d'argile", image: "/images/food/9.jpg" },
         { id: "mains", label: "Plats", tagline: "Genereux et aromatiques", image: "/images/food/8.jpg" },
-        { id: "drinks", label: "Boissons", tagline: "Du lassi aux cocktails", image: "/images/food/6.jpg" },
+        { id: "drinks", label: "Boissons", tagline: "Du lassi aux cocktails", image: "/images/food/drink.png" },
       ],
     },
     gallery: { eyebrow: "Notre Monde", title: "Un Festin pour", accent: "les Yeux" },

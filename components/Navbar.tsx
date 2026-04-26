@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   languageLabels,
   locales,
@@ -22,10 +22,37 @@ type Props = {
 
 const navItems = [
   { href: "/", key: "home", section: "home" },
-  { href: "/menu", key: "menu", section: "menu" },
-  { href: "#about", key: "about", section: "about" },
+  { href: "#about", key: "story", section: "about" },
+  { href: "#signature-dishes", key: "signature", section: "signature-dishes" },
+  { href: "#preview", key: "preview", section: "preview" },
   { href: "#contact", key: "contact", section: "contact" },
 ] as const;
+
+const menuLink = { href: "/menu", key: "menuLink", section: "menu" } as const;
+const observedSections = ["home", "about", "signature-dishes", "preview", "contact"] as const;
+const themeStoreEvent = "masala-theme-change";
+
+function getStoredTheme(): ThemeChoice {
+  if (typeof window === "undefined") return "system";
+
+  const saved = window.localStorage.getItem("masala-theme");
+  return saved === "light" || saved === "dark" || saved === "system" ? saved : "system";
+}
+
+function subscribeToThemeStore(onStoreChange: () => void) {
+  window.addEventListener("storage", onStoreChange);
+  window.addEventListener(themeStoreEvent, onStoreChange);
+
+  return () => {
+    window.removeEventListener("storage", onStoreChange);
+    window.removeEventListener(themeStoreEvent, onStoreChange);
+  };
+}
+
+function setStoredTheme(theme: ThemeChoice) {
+  window.localStorage.setItem("masala-theme", theme);
+  window.dispatchEvent(new Event(themeStoreEvent));
+}
 
 function GlobeIcon() {
   return (
@@ -63,18 +90,25 @@ function ThemeIcon({ theme }: { theme: ThemeChoice }) {
   );
 }
 
+function MenuMark() {
+  return (
+    <span className="grid h-4 w-4 grid-cols-2 gap-0.5" aria-hidden="true">
+      <span className="rounded-[1px] bg-current opacity-90" />
+      <span className="rounded-[1px] bg-current opacity-55" />
+      <span className="rounded-[1px] bg-current opacity-55" />
+      <span className="rounded-[1px] bg-current opacity-90" />
+    </span>
+  );
+}
+
 export default function Navbar({ locale, copy, brand }: Props) {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
-  const [theme, setTheme] = useState<ThemeChoice>(() => {
-    if (typeof window === "undefined") return "system";
-    const saved = window.localStorage.getItem("masala-theme");
-    return saved === "light" || saved === "dark" || saved === "system" ? saved : "system";
-  });
-  const [activeSection, setActiveSection] = useState<(typeof navItems)[number]["section"]>("home");
+  const theme = useSyncExternalStore<ThemeChoice>(subscribeToThemeStore, getStoredTheme, () => "system");
+  const [activeSection, setActiveSection] = useState<(typeof observedSections)[number] | typeof menuLink.section>("home");
 
   useEffect(() => {
     const onScroll = () => {
@@ -85,17 +119,17 @@ export default function Navbar({ locale, copy, brand }: Props) {
         return;
       }
 
-      const contact = document.getElementById("contact");
-      const about = document.getElementById("about");
       const scrollLine = window.scrollY + Math.min(window.innerHeight * 0.45, 420);
+      let currentSection: (typeof observedSections)[number] = "home";
 
-      if (contact && scrollLine >= contact.offsetTop) {
-        setActiveSection("contact");
-      } else if (about && scrollLine >= about.offsetTop) {
-        setActiveSection("about");
-      } else {
-        setActiveSection("home");
+      for (const section of observedSections) {
+        const element = document.getElementById(section);
+        if (element && scrollLine >= element.offsetTop) {
+          currentSection = section;
+        }
       }
+
+      setActiveSection(currentSection);
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -105,10 +139,8 @@ export default function Navbar({ locale, copy, brand }: Props) {
   useEffect(() => {
     if (theme === "system") {
       document.documentElement.removeAttribute("data-theme");
-      window.localStorage.setItem("masala-theme", "system");
     } else {
       document.documentElement.dataset.theme = theme;
-      window.localStorage.setItem("masala-theme", theme);
     }
   }, [theme]);
 
@@ -123,6 +155,11 @@ export default function Navbar({ locale, copy, brand }: Props) {
       })),
     [copy, locale]
   );
+  const fullMenuLink = {
+    href: localizePath(locale, menuLink.href),
+    label: copy[menuLink.key],
+    section: menuLink.section,
+  };
 
   return (
     <header
@@ -208,7 +245,7 @@ export default function Navbar({ locale, copy, brand }: Props) {
                       key={option}
                       type="button"
                       onClick={() => {
-                        setTheme(option);
+                        setStoredTheme(option);
                         setThemeOpen(false);
                       }}
                       className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium capitalize transition ${
@@ -238,17 +275,26 @@ export default function Navbar({ locale, copy, brand }: Props) {
         </div>
 
         <div className="hidden h-14 items-center justify-between md:flex">
-          <div className="flex items-center gap-7 lg:gap-11">
+          <div className="flex items-center gap-5 lg:gap-8">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 data-active={activeSection === link.section}
-                className="masala-nav-link py-2 text-sm font-semibold text-cream/74 transition hover:text-cream data-[active=true]:text-cream"
+                className="masala-nav-link py-2 text-[0.78rem] font-bold uppercase tracking-[0.16em] text-cream/68 transition hover:text-cream data-[active=true]:text-cream"
               >
                 {link.label}
               </Link>
             ))}
+            <span className="mx-1 h-5 w-px bg-cream/18" aria-hidden="true" />
+            <Link
+              href={fullMenuLink.href}
+              data-active={activeSection === fullMenuLink.section}
+              className="masala-nav-link flex items-center gap-2 py-2 text-[0.78rem] font-bold uppercase tracking-[0.16em] text-saffron-light/86 transition hover:text-saffron-light data-[active=true]:text-saffron-light"
+            >
+              <MenuMark />
+              <span>{fullMenuLink.label}</span>
+            </Link>
           </div>
           <a
             href="tel:+34631751388"
@@ -267,11 +313,21 @@ export default function Navbar({ locale, copy, brand }: Props) {
               href={link.href}
               onClick={() => setMobileOpen(false)}
               data-active={activeSection === link.section}
-              className="masala-nav-link w-fit px-1 py-3 text-base font-medium text-cream/82 transition hover:text-cream data-[active=true]:text-cream"
+              className="masala-nav-link w-fit px-1 py-3 text-sm font-bold uppercase tracking-[0.14em] text-cream/82 transition hover:text-cream data-[active=true]:text-cream"
             >
               {link.label}
             </Link>
           ))}
+          <span className="my-1 h-px w-full bg-cream/12" aria-hidden="true" />
+          <Link
+            href={fullMenuLink.href}
+            onClick={() => setMobileOpen(false)}
+            data-active={activeSection === fullMenuLink.section}
+            className="masala-nav-link flex w-fit items-center gap-2 px-1 py-3 text-sm font-bold uppercase tracking-[0.14em] text-saffron-light/86 transition hover:text-saffron-light data-[active=true]:text-saffron-light"
+          >
+            <MenuMark />
+            <span>{fullMenuLink.label}</span>
+          </Link>
           <a
             href="tel:+34631751388"
             className="masala-btn masala-btn-filled mt-2 px-5 py-3 text-center text-sm font-semibold text-cream"

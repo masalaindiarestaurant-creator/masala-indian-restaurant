@@ -15,7 +15,7 @@ type Props = { copy: SiteDictionary["gallery"] };
 
 export default function Gallery({ copy }: Props) {
   return (
-    <section className="bg-page py-24 lg:py-32 overflow-hidden">
+    <section id="preview" className="bg-page py-24 lg:py-32 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <RevealOnScroll className="text-center mb-16">
           <p className="section-label mb-4">{copy.eyebrow}</p>
@@ -40,12 +40,15 @@ export default function Gallery({ copy }: Props) {
               delay={(i % 3) as 0 | 1 | 2 | 3 | 4}
               className={`group relative overflow-hidden ${img.tall ? "row-span-2" : ""}`}
             >
-              <div className={`relative overflow-hidden ${img.tall ? "aspect-[3/4]" : "aspect-square"}`}>
+              <div
+                className={`relative w-full min-h-0 overflow-hidden ${img.tall ? "aspect-[3/4]" : "aspect-square"}`}
+              >
                 <Image
                   src={img.src}
                   alt={img.alt}
-                  fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  width={img.tall ? 600 : 800}
+                  height={img.tall ? 800 : 800}
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                   sizes="(max-width: 768px) 50vw, 33vw"
                 />
                 {/* Subtle hover overlay */}

@@ -1,19 +1,11 @@
 import type { Metadata } from "next";
-import { Google_Sans_Flex, Marcellus } from "next/font/google";
+import { Marcellus } from "next/font/google";
 import "./globals.css";
 
 const marcellus = Marcellus({
   subsets: ["latin"],
   weight: "400",
   variable: "--font-marcellus",
-  display: "swap",
-});
-
-const googleSansFlex = Google_Sans_Flex({
-  subsets: ["latin"],
-  weight: "variable",
-  axes: ["opsz", "wdth", "GRAD", "ROND"],
-  variable: "--font-google-sans-flex",
   display: "swap",
 });
 
@@ -27,7 +19,15 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${marcellus.variable} ${googleSansFlex.variable}`}>
+    <html lang="en" className={marcellus.variable}>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:ital,opsz,wdth,wght,GRAD@0,8,100,400..1000,0&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body className="bg-page text-ink font-body antialiased">{children}</body>
     </html>
   );

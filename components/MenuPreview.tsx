@@ -32,13 +32,14 @@ export default function MenuPreview({ locale, copy }: Props) {
             <RevealOnScroll key={cat.id} delay={(i % 4) as 0 | 1 | 2 | 3 | 4}>
               <Link
                 href={localizePath(locale, `/menu#${cat.id}`)}
-                className="group relative block aspect-[3/4] overflow-hidden"
+                className="group relative block w-full aspect-[3/4] overflow-hidden"
               >
                 <Image
                   src={cat.image}
                   alt={cat.label}
-                  fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-110"
+                  width={600}
+                  height={800}
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                   sizes="(max-width: 768px) 50vw, 25vw"
                 />
                 {/* Gradient */}

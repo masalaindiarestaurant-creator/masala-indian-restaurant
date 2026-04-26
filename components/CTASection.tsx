@@ -6,7 +6,7 @@ type Props = { copy: SiteDictionary["cta"] };
 
 export default function CTASection({ copy }: Props) {
   return (
-    <section className="relative py-28 lg:py-36 overflow-hidden">
+    <section id="contact" className="relative py-28 lg:py-36 overflow-hidden">
       {/* Background */}
       <Image
         src="/images/food/4.jpeg"

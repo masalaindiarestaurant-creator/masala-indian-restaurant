@@ -12,11 +12,11 @@ type Props = {
 };
 
 const slides = [
-  { src: "/images/food/5.jpg", alt: "Signature Indian dish", position: "center 48%", accent: "#f08a0a" },
-  { src: "/images/food/14.jpg", alt: "Masala main course", position: "center 42%", accent: "#d6a73f" },
-  { src: "/images/food/9.jpg", alt: "Tandoori sizzler platter", position: "center 52%", accent: "#c93d24" },
-  { src: "/images/visits/10.jpg", alt: "Masala restaurant ambiance", position: "center 58%", accent: "#91a957" },
-  { src: "/images/food/12.jpg", alt: "Aromatic Indian curry", position: "center 46%", accent: "#e0b55c" },
+  { src: "/images/hero-banner/signature-dish.png", alt: "Signature Indian dish", position: "center 48%", accent: "#f08a0a" },
+  { src: "/images/hero-banner/chicken-wings.png", alt: "Masala main course", position: "center 42%", accent: "#d6a73f" },
+  { src: "/images/hero-banner/tandoor-skewers.png", alt: "Tandoori sizzler platter", position: "center 52%", accent: "#c93d24" },
+  { src: "/images/hero-banner/restaurant-ambiance.jpg", alt: "Masala restaurant ambiance", position: "center 58%", accent: "#91a957" },
+  { src: "/images/hero-banner/curry-karahi.png", alt: "Aromatic Indian curry", position: "center 46%", accent: "#e0b55c" },
 ];
 
 export default function Hero({ locale, copy }: Props) {
@@ -37,6 +37,7 @@ export default function Hero({ locale, copy }: Props) {
 
   return (
     <section
+      id="home"
       className="relative flex h-screen min-h-[680px] items-center justify-center overflow-hidden bg-dark"
       style={{ "--hero-accent": slides[current].accent } as CSSProperties}
     >

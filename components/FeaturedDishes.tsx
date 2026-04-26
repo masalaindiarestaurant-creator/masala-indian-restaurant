@@ -19,7 +19,7 @@ function SpiceDots({ level }: { level: number }) {
 
 export default function FeaturedDishes({ copy }: Props) {
   return (
-    <section className="bg-surface-soft py-24 lg:py-32">
+    <section id="signature-dishes" className="bg-surface-soft py-24 lg:py-32">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <RevealOnScroll className="text-center mb-16">
           <p className="section-label mb-4">{copy.eyebrow}</p>
@@ -40,12 +40,13 @@ export default function FeaturedDishes({ copy }: Props) {
           {copy.dishes.map((dish, i) => (
             <RevealOnScroll key={dish.name} delay={(i + 1) as 1 | 2 | 3} className="group">
               {/* Image */}
-              <div className="relative aspect-[3/4] overflow-hidden mb-6 shadow-lg">
+              <div className="relative w-full aspect-[3/4] overflow-hidden mb-6 shadow-lg">
                 <Image
                   src={dish.image}
                   alt={dish.name}
-                  fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  width={600}
+                  height={800}
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                   sizes="(max-width: 768px) 100vw, 33vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-dark/60 to-transparent" />
