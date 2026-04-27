@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import type { MenuCategory, SpiceLevel } from "@/data/menu";
 import DishRow from "./DishCard";
@@ -28,6 +28,7 @@ export default function MenuClient({ categories, initialCategory, labels, legend
   const [activeId, setActiveId] = useState(initialCategory ?? categories[0].id);
   const [isStuck, setIsStuck] = useState(false);
   const tabsRef = useRef<HTMLDivElement>(null);
+  const stickySentinelRef = useRef<HTMLDivElement | null>(null);
   const stickyNavRef = useRef<HTMLDivElement | null>(null);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
   const rafRef = useRef<number | null>(null);
@@ -37,13 +38,6 @@ export default function MenuClient({ categories, initialCategory, labels, legend
     if (rafRef.current != null) return;
     rafRef.current = requestAnimationFrame(() => {
       rafRef.current = null;
-      const nav = stickyNavRef.current;
-      if (nav) {
-        const parsed = parseFloat(getComputedStyle(nav).top);
-        const offsetPx = Number.isNaN(parsed) ? 80 : parsed;
-        const t = nav.getBoundingClientRect().top;
-        setIsStuck(Math.abs(t - offsetPx) < 3);
-      }
       if (clickScrollRef.current) {
         return;
       }
@@ -74,6 +68,22 @@ export default function MenuClient({ categories, initialCategory, labels, legend
       }
     };
   }, [onScrollRaf]);
+
+  useLayoutEffect(() => {
+    const sentinel = stickySentinelRef.current;
+    const sticky = stickyNavRef.current;
+    if (!sentinel || !sticky) return;
+    const raw = parseFloat(getComputedStyle(sticky).top);
+    const offsetPx = Number.isNaN(raw) ? 80 : raw;
+    const obs = new IntersectionObserver(
+      ([e]) => {
+        setIsStuck(!e.isIntersecting);
+      },
+      { root: null, rootMargin: `-${offsetPx}px 0px 0px 0px`, threshold: [0] }
+    );
+    obs.observe(sentinel);
+    return () => obs.disconnect();
+  }, []);
 
   const headerScrollOffset = () => {
     if (typeof window === "undefined") return 148;
@@ -107,6 +117,7 @@ export default function MenuClient({ categories, initialCategory, labels, legend
         spiceIndicator={legend.spiceIndicator}
         priceNote={legend.priceNote}
       />
+      <div ref={stickySentinelRef} className="h-px w-full shrink-0" aria-hidden />
       <div
         ref={stickyNavRef}
         className={`menu-subnav sticky top-20 z-40 w-full border-y ${
