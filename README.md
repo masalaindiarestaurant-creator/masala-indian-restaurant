@@ -100,6 +100,7 @@ The site supports four locales routed under `app/[lang]/`:
 | `nl` | Dutch |
 | `es` | Spanish |
 | `fr` | French |
+| `no` | Norwegian |
 
 All UI copy lives in `lib/i18n.ts` as typed `SiteDictionary` objects — one per locale. Menu category labels and item notes are also localised there. The `getDictionary(locale)` and `getLocalizedMenuCategories(locale)` helpers are used in server components to pass the correct copy down.
 
@@ -127,6 +128,16 @@ All menu content is defined in `data/menu.ts`. Categories include:
 - Cocktails & Coffees
 
 Each item can carry a `spiceLevel` (0–4), a `veg` flag, a `chefSpecial` flag, a protein key, and an optional `note`.
+
+---
+
+## Design & Branding
+
+Site designed and crafted by [lowhp.studio](https://lowhp.studio). Branding elements include:
+
+- A styled `.lowhp-mark` link component (shown on the entry transition splash screen)
+- A `ConsoleBrand` component that logs a branded credit message to the browser console
+- A `--lowhp-accent` CSS variable (`#7df9c5`) used across brand-highlight states
 
 ---
 
