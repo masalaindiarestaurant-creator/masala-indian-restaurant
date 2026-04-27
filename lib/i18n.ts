@@ -127,6 +127,7 @@ export type SiteDictionary = {
     hours: string;
     rights: string;
     crafted: string;
+    designedBy: string;
     links: {
       fullMenu: string;
       special: string;
@@ -289,6 +290,7 @@ export const dictionaries: Record<Locale, SiteDictionary> = {
       hours: "Reservations",
       rights: "All rights reserved.",
       crafted: "Crafted with love for Indian cuisine",
+      designedBy: "Designed by",
       links: {
         fullMenu: "Full Menu",
         special: "Special Menu",
@@ -419,6 +421,7 @@ export const dictionaries: Record<Locale, SiteDictionary> = {
       hours: "Reserveringen",
       rights: "Alle rechten voorbehouden.",
       crafted: "Gemaakt met liefde voor de Indiase keuken",
+      designedBy: "Ontworpen door",
       links: { fullMenu: "Volledig Menu", special: "Speciaal Menu", starters: "Voorgerechten", tandoori: "Tandoori", mains: "Hoofdgerechten", chef: "Chef Specials", drinks: "Drankjes" },
     },
     menuPage: {
@@ -520,6 +523,7 @@ export const dictionaries: Record<Locale, SiteDictionary> = {
       hours: "Reservas",
       rights: "Todos los derechos reservados.",
       crafted: "Hecho con amor por la cocina india",
+      designedBy: "Diseñado por",
       links: { fullMenu: "Menu Completo", special: "Menu Especial", starters: "Entrantes", tandoori: "Tandoori", mains: "Principales", chef: "Especiales del Chef", drinks: "Bebidas" },
     },
     menuPage: {
@@ -621,6 +625,7 @@ export const dictionaries: Record<Locale, SiteDictionary> = {
       hours: "Reservations",
       rights: "Tous droits reserves.",
       crafted: "Prepare avec amour pour la cuisine indienne",
+      designedBy: "Conçu par",
       links: { fullMenu: "Menu Complet", special: "Menu Special", starters: "Entrees", tandoori: "Tandoori", mains: "Plats", chef: "Specialites du Chef", drinks: "Boissons" },
     },
     menuPage: {
@@ -767,6 +772,7 @@ export const dictionaries: Record<Locale, SiteDictionary> = {
       hours: "Reservasjoner",
       rights: "Alle rettigheter forbeholdt.",
       crafted: "Lagd med kjærlighet for indisk mat",
+      designedBy: "Designet av",
       links: {
         fullMenu: "Full meny",
         special: "Spesialmeny",

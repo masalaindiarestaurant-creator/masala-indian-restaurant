@@ -66,6 +66,15 @@ export default function EntryTransition() {
             exit={{ opacity: 0, scaleX: 0.7 }}
             transition={{ duration: 0.78, ease: [0.2, 0.82, 0.22, 1], delay: 0.36 }}
           />
+          <motion.span
+            className="masala-entry-transition__credit"
+            initial={{ opacity: 0, y: 6, filter: "blur(6px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: -4, filter: "blur(4px)" }}
+            transition={{ duration: 0.6, ease: [0.2, 0.82, 0.22, 1], delay: 0.62 }}
+          >
+            by<b>lowhp.studio</b>
+          </motion.span>
         </motion.div>
       )}
     </AnimatePresence>

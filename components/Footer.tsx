@@ -1,4 +1,5 @@
 import RouteTransitionLink from "./RouteTransitionLink";
+import LowhpMark from "./LowhpMark";
 import { localizePath, type Locale, type SiteDictionary } from "@/lib/i18n";
 
 type Props = {
@@ -152,9 +153,7 @@ export default function Footer({ locale, copy, nav, brand }: Props) {
           <p className="text-cream/30 text-xs font-body">
             © {new Date().getFullYear()} Masala Indian Restaurant. {copy.rights}
           </p>
-          <p className="text-cream/20 text-xs font-body">
-            {copy.crafted}
-          </p>
+          <LowhpMark prefix={copy.designedBy} variant="footer" />
         </div>
       </div>
     </footer>

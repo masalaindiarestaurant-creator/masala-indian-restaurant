@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Marcellus } from "next/font/google";
+import ConsoleBrand from "@/components/ConsoleBrand";
 import EntryTransition from "@/components/EntryTransition";
 import MotionProvider from "@/components/MotionProvider";
 import "./globals.css";
@@ -15,6 +16,12 @@ export const metadata: Metadata = {
   title: "Masala Indian Restaurant | Authentic Indian Cuisine",
   description:
     "Experience authentic Indian flavours at Masala Indian Restaurant with tandoori dishes, curries, vegetarian choices and a full drinks menu.",
+  authors: [{ name: "lowhp.studio", url: "https://lowhp.studio" }],
+  creator: "lowhp.studio",
+  publisher: "Masala Indian Restaurant",
+  other: {
+    "designed-by": "lowhp.studio — https://lowhp.studio",
+  },
 };
 
 export default function RootLayout({
@@ -37,6 +44,16 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-page text-ink font-body antialiased">
+        <div
+          aria-hidden="true"
+          style={{ display: "none" }}
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html:
+              "<!--\n  ───────────────────────────────────────────────\n   Masala Indian Restaurant\n   Designed & built by lowhp.studio\n   → https://lowhp.studio\n  ───────────────────────────────────────────────\n-->",
+          }}
+        />
+        <ConsoleBrand />
         <MotionProvider>
           <EntryTransition />
           {children}
