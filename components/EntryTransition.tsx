@@ -16,7 +16,10 @@ export default function EntryTransition() {
   const reducedMotion = useReducedMotion();
 
   useEffect(() => {
-    if (shouldSkipEntryTransition(reducedMotion)) return;
+    if (shouldSkipEntryTransition(reducedMotion)) {
+      document.getElementById("entry-block")?.remove();
+      return;
+    }
 
     window.sessionStorage.setItem(storageKey, "true");
 
@@ -27,6 +30,10 @@ export default function EntryTransition() {
       window.clearTimeout(timer);
     };
   }, [reducedMotion]);
+
+  useEffect(() => {
+    if (visible) document.getElementById("entry-block")?.remove();
+  }, [visible]);
 
   return (
     <AnimatePresence>
