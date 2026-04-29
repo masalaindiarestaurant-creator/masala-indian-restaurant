@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -175,7 +177,6 @@ function CategoryDetail({
   categoryId: Id<"menuCategories">;
   locale: Locale;
 }) {
-  const upsertCatContent = useMutation(api.admin.upsertMenuCategoryContent);
   const catData = useQuery(api.menu.getCategoryWithContent, { categoryId });
 
   if (!catData) {
@@ -186,6 +187,19 @@ function CategoryDetail({
     );
   }
 
+  return <CategoryDetailLoaded categoryId={categoryId} locale={locale} catData={catData} />;
+}
+
+function CategoryDetailLoaded({
+  categoryId,
+  locale,
+  catData,
+}: {
+  categoryId: Id<"menuCategories">;
+  locale: Locale;
+  catData: NonNullable<ReturnType<typeof useQuery<typeof api.menu.getCategoryWithContent>>>;
+}) {
+  const upsertCatContent = useMutation(api.admin.upsertMenuCategoryContent);
   const content = catData.contents.find((c: any) => c.locale === locale);
   const [catFields, setCatFields] = useState({
     label: content?.label ?? "",
@@ -263,7 +277,7 @@ function CategoryDetail({
           Items ({catData.items.length})
         </h3>
         {catData.items.map((item: any) => (
-          <ItemEditor key={item._id} item={item} locale={locale} />
+          <ItemEditor key={`${item._id}-${locale}`} item={item} locale={locale} />
         ))}
       </div>
     </div>
@@ -320,7 +334,7 @@ export default function MenuAdminPage() {
 
             <div>
               {selectedId ? (
-                <CategoryDetail categoryId={selectedId} locale={locale} />
+                <CategoryDetail key={`${selectedId}-${locale}`} categoryId={selectedId} locale={locale} />
               ) : (
                 <div className="flex items-center justify-center h-40 text-zinc-500 text-sm">
                   Select a category to edit

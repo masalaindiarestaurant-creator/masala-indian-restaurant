@@ -17,6 +17,7 @@ const SECTIONS = [
   { key: "values", label: "Values" },
   { key: "cta", label: "CTA" },
   { key: "footer", label: "Footer" },
+  { key: "menuPage", label: "Menu Page" },
   { key: "meta", label: "SEO / Meta" },
 ];
 

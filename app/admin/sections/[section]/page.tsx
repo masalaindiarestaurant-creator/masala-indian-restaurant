@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { use, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -33,6 +35,7 @@ const SECTION_LABELS: Record<string, string> = {
   values: "Values",
   cta: "CTA",
   footer: "Footer",
+  menuPage: "Menu Page",
   meta: "SEO / Meta",
 };
 
@@ -107,6 +110,7 @@ function NavbarEditor({ data, locale }: { data: any; locale: Locale }) {
     reserve: data?.reserve ?? "",
     toggle: data?.toggle ?? "",
     language: data?.language ?? "",
+    about: data?.about ?? "",
     links: data?.links ?? [],
   });
 
@@ -129,6 +133,7 @@ function NavbarEditor({ data, locale }: { data: any; locale: Locale }) {
       <Field label="Reserve CTA" value={fields.reserve} onChange={set("reserve")} />
       <Field label="Toggle label" value={fields.toggle} onChange={set("toggle")} />
       <Field label="Language label" value={fields.language} onChange={set("language")} />
+      <Field label="About label" value={fields.about} onChange={set("about")} />
       <div className="space-y-1.5">
         <Label className="text-zinc-300 text-xs uppercase tracking-wide">Nav Links</Label>
         <div className="space-y-2">
@@ -249,6 +254,7 @@ function SimpleSectionEditor({
     values: api.admin.upsertValues,
     featured: api.admin.upsertFeatured,
     menuPreview: api.admin.upsertMenuPreview,
+    menuPage: api.admin.upsertMenuPage,
     footer: api.admin.upsertFooter,
   };
 

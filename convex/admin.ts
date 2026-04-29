@@ -1,5 +1,6 @@
 import { mutation } from "./_generated/server";
 import { v } from "convex/values";
+import type { MutationCtx } from "./_generated/server";
 
 const locale = v.union(
   v.literal("en"),
@@ -13,20 +14,25 @@ const status = v.union(v.literal("draft"), v.literal("published"));
 
 // Generic upsert for any section table
 async function upsertSection(
-  ctx: any,
+  ctx: MutationCtx,
   table: string,
   localeVal: string,
   data: Record<string, unknown>
 ) {
-  const existing = await ctx.db
+  // The admin screen intentionally routes multiple content tables through one helper.
+  // Convex cannot strongly type this dynamic table access, so keep the escape hatch local.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = ctx.db as any;
+  const existing = await db
     .query(table)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .withIndex("by_locale", (q: any) => q.eq("locale", localeVal))
     .first();
   if (existing) {
-    await ctx.db.patch(existing._id, data);
+    await db.patch(existing._id, data);
     return existing._id;
   }
-  return ctx.db.insert(table, { locale: localeVal, ...data });
+  return db.insert(table, { locale: localeVal, ...data });
 }
 
 export const upsertHero = mutation({
@@ -40,6 +46,17 @@ export const upsertHero = mutation({
     primary: v.string(),
     secondary: v.string(),
     scroll: v.string(),
+    slides: v.optional(
+      v.array(
+        v.object({
+          src: v.string(),
+          srcId: v.optional(v.id("_storage")),
+          alt: v.string(),
+          position: v.string(),
+          accent: v.string(),
+        })
+      )
+    ),
   },
   handler: async (ctx, { locale, ...data }) => {
     return upsertSection(ctx, "heroContent", locale, data);
@@ -70,6 +87,7 @@ export const upsertNavbar = mutation({
     reserve: v.string(),
     toggle: v.string(),
     language: v.string(),
+    about: v.string(),
   },
   handler: async (ctx, { locale, ...data }) => {
     return upsertSection(ctx, "navbarContent", locale, data);
@@ -88,6 +106,13 @@ export const upsertStory = mutation({
     primary: v.string(),
     secondary: v.string(),
     stat: v.string(),
+    image: v.optional(
+      v.object({
+        src: v.string(),
+        srcId: v.optional(v.id("_storage")),
+        alt: v.string(),
+      })
+    ),
   },
   handler: async (ctx, { locale, ...data }) => {
     return upsertSection(ctx, "storyContent", locale, data);
@@ -167,6 +192,17 @@ export const upsertGallery = mutation({
     eyebrow: v.string(),
     title: v.string(),
     accent: v.string(),
+    images: v.optional(
+      v.array(
+        v.object({
+          src: v.string(),
+          srcId: v.optional(v.id("_storage")),
+          label: v.string(),
+          sub: v.string(),
+          featured: v.optional(v.boolean()),
+        })
+      )
+    ),
   },
   handler: async (ctx, { locale, ...data }) => {
     return upsertSection(ctx, "galleryContent", locale, data);
@@ -197,6 +233,14 @@ export const upsertCta = mutation({
     body: v.string(),
     hours: v.string(),
     addressLine: v.string(),
+    backgroundImage: v.optional(
+      v.object({
+        src: v.string(),
+        srcId: v.optional(v.id("_storage")),
+        alt: v.string(),
+        position: v.optional(v.string()),
+      })
+    ),
   },
   handler: async (ctx, { locale, ...data }) => {
     return upsertSection(ctx, "ctaContent", locale, data);
@@ -217,6 +261,7 @@ export const upsertFooter = mutation({
     hours: v.string(),
     rights: v.string(),
     crafted: v.string(),
+    designedBy: v.string(),
     links: v.object({
       fullMenu: v.string(),
       special: v.string(),
@@ -229,6 +274,41 @@ export const upsertFooter = mutation({
   },
   handler: async (ctx, { locale, ...data }) => {
     return upsertSection(ctx, "footerContent", locale, data);
+  },
+});
+
+export const upsertMenuPage = mutation({
+  args: {
+    locale,
+    status,
+    eyebrow: v.string(),
+    title: v.string(),
+    accent: v.string(),
+    vegetarian: v.string(),
+    spiceIndicator: v.string(),
+    priceNote: v.string(),
+    chefSpecial: v.string(),
+    proteins: v.object({
+      chicken: v.string(),
+      lamb: v.string(),
+      beef: v.string(),
+      prawn: v.string(),
+      fish: v.string(),
+      vegetable: v.string(),
+      special: v.string(),
+    }),
+    spiceLevels: v.array(v.string()),
+    heroImage: v.optional(
+      v.object({
+        src: v.string(),
+        srcId: v.optional(v.id("_storage")),
+        alt: v.string(),
+        position: v.string(),
+      })
+    ),
+  },
+  handler: async (ctx, { locale, ...data }) => {
+    return upsertSection(ctx, "menuPageContent", locale, data);
   },
 });
 

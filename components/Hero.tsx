@@ -6,20 +6,19 @@ import { useEffect, useState } from "react";
 import { motion, useReducedMotion, type Variants } from "motion/react";
 import MotionPressable from "./MotionPressable";
 import RouteTransitionLink from "./RouteTransitionLink";
-import { localizePath, type Locale, type SiteDictionary } from "@/lib/i18n";
+import type { SiteDictionary } from "@/lib/i18n";
+import { localizePath, type Locale } from "@/lib/locales";
 
 type Props = {
   locale: Locale;
   copy: SiteDictionary["hero"];
+  slides: Array<{
+    src: string;
+    alt: string;
+    position: string;
+    accent: string;
+  }>;
 };
-
-const slides = [
-  { src: "/images/hero-banner/signature-dish.png", alt: "Signature Indian dish", position: "center 48%", accent: "#f08a0a" },
-  { src: "/images/hero-banner/chicken-wings.png", alt: "Masala main course", position: "center 42%", accent: "#d6a73f" },
-  { src: "/images/hero-banner/tandoor-skewers.png", alt: "Tandoori sizzler platter", position: "center 52%", accent: "#c93d24" },
-  { src: "/images/hero-banner/restaurant-ambiance.jpg", alt: "Masala restaurant ambiance", position: "center 58%", accent: "#91a957" },
-  { src: "/images/hero-banner/curry-karahi.png", alt: "Aromatic Indian curry", position: "center 46%", accent: "#e0b55c" },
-];
 
 const heroContainer: Variants = {
   hidden: {},
@@ -41,7 +40,7 @@ const heroItem: Variants = {
   },
 };
 
-export default function Hero({ locale, copy }: Props) {
+export default function Hero({ locale, copy, slides }: Props) {
   const [current, setCurrent] = useState(0);
   const [prev, setPrev] = useState<number | null>(null);
   const reducedMotion = useReducedMotion();
@@ -52,11 +51,11 @@ export default function Hero({ locale, copy }: Props) {
       setCurrent((c) => (c + 1) % slides.length);
     }, 5200);
     return () => clearInterval(timer);
-  }, [current]);
+  }, [current, slides.length]);
 
   useEffect(() => {
     document.documentElement.style.setProperty("--ambient-accent", slides[current].accent);
-  }, [current]);
+  }, [current, slides]);
 
   return (
     <section

@@ -1,8 +1,66 @@
 import { internalMutation } from "./_generated/server";
 import { v } from "convex/values";
-import { type Id } from "./_generated/dataModel";
 import { locales, dictionaries, menuCategoryText } from "@/lib/i18n";
 import { menuCategories } from "@/data/menu";
+
+const heroSlides = [
+  {
+    src: "/images/hero-banner/signature-dish.png",
+    alt: "Signature Indian dish",
+    position: "center 48%",
+    accent: "#f08a0a",
+  },
+  {
+    src: "/images/hero-banner/chicken-wings.png",
+    alt: "Masala main course",
+    position: "center 42%",
+    accent: "#d6a73f",
+  },
+  {
+    src: "/images/hero-banner/tandoor-skewers.png",
+    alt: "Tandoori sizzler platter",
+    position: "center 52%",
+    accent: "#c93d24",
+  },
+  {
+    src: "/images/hero-banner/restaurant-ambiance.jpg",
+    alt: "Masala restaurant ambiance",
+    position: "center 58%",
+    accent: "#91a957",
+  },
+  {
+    src: "/images/hero-banner/curry-karahi.png",
+    alt: "Aromatic Indian curry",
+    position: "center 46%",
+    accent: "#e0b55c",
+  },
+];
+
+const storyImage = {
+  src: "/images/visits/10.jpg",
+  alt: "Masala Indian Restaurant interior",
+};
+
+const galleryImages = [
+  { src: "/images/food/12.jpg", label: "Signature Curry", sub: "Our most-loved dish", featured: true },
+  { src: "/images/visits/10.jpg", label: "Warm Welcomes", sub: "Every guest, every time" },
+  { src: "/images/food/11.jpg", label: "Golden Samosas", sub: "Crisp. Spiced. Perfect." },
+  { src: "/images/food/13.jpg", label: "Falooda Kulfi", sub: "A sweet finale" },
+  { src: "/images/visits/15.jpg", label: "Family Feasts", sub: "Memories made here" },
+  { src: "/images/visits/7.jpg", label: "Cherished Moments", sub: "Laughter and naan" },
+];
+
+const ctaBackgroundImage = {
+  src: "/images/food/4.jpeg",
+  alt: "Indian cuisine spread",
+  position: "center",
+};
+
+const menuHeroImage = {
+  src: "/images/hero-banner/tandoor-skewers.png",
+  alt: "Tandoori platter from Masala Indian Restaurant",
+  position: "center 52%",
+};
 
 // Run: npx convex run seed:content
 export const content = internalMutation({
@@ -34,6 +92,7 @@ export const content = internalMutation({
         reserve: dict.nav.reserve,
         toggle: dict.nav.toggle,
         language: dict.nav.language,
+        about: dict.nav.about,
       });
 
       await ctx.db.insert("heroContent", {
@@ -45,6 +104,7 @@ export const content = internalMutation({
         primary: dict.hero.primary,
         secondary: dict.hero.secondary,
         scroll: dict.hero.scroll,
+        slides: heroSlides,
       });
 
       await ctx.db.insert("storyContent", {
@@ -57,6 +117,7 @@ export const content = internalMutation({
         primary: dict.story.primary,
         secondary: dict.story.secondary,
         stat: dict.story.stat,
+        image: storyImage,
       });
 
       await ctx.db.insert("statsContent", {
@@ -97,6 +158,7 @@ export const content = internalMutation({
         eyebrow: dict.gallery.eyebrow,
         title: dict.gallery.title,
         accent: dict.gallery.accent,
+        images: galleryImages,
       });
 
       await ctx.db.insert("valuesContent", {
@@ -115,6 +177,7 @@ export const content = internalMutation({
         body: dict.cta.body,
         hours: dict.cta.hours,
         addressLine: dict.cta.addressLine,
+        backgroundImage: ctaBackgroundImage,
       });
 
       await ctx.db.insert("footerContent", {
@@ -129,9 +192,141 @@ export const content = internalMutation({
         hours: dict.footer.hours,
         rights: dict.footer.rights,
         crafted: dict.footer.crafted,
+        designedBy: dict.footer.designedBy,
         links: dict.footer.links,
       });
+
+      await ctx.db.insert("menuPageContent", {
+        locale,
+        status: "published",
+        eyebrow: dict.menuPage.eyebrow,
+        title: dict.menuPage.title,
+        accent: dict.menuPage.accent,
+        vegetarian: dict.menuPage.vegetarian,
+        spiceIndicator: dict.menuPage.spiceIndicator,
+        priceNote: dict.menuPage.priceNote,
+        chefSpecial: dict.menuPage.chefSpecial,
+        proteins: {
+          chicken: dict.menuPage.proteins.chicken,
+          lamb: dict.menuPage.proteins.lamb,
+          beef: dict.menuPage.proteins.beef,
+          prawn: dict.menuPage.proteins.prawn,
+          fish: dict.menuPage.proteins.fish,
+          vegetable: dict.menuPage.proteins.vegetable,
+          special: dict.menuPage.proteins.special,
+        },
+        spiceLevels: [
+          dict.menuPage.spice[0],
+          dict.menuPage.spice[1],
+          dict.menuPage.spice[2],
+          dict.menuPage.spice[3],
+          dict.menuPage.spice[4],
+        ],
+        heroImage: menuHeroImage,
+      });
     }
+    return { ok: true };
+  },
+});
+
+// Run: npx convex run seed:menuPageContent
+export const menuPageContent = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    for (const locale of locales) {
+      const dict = dictionaries[locale];
+      const data = {
+        status: "published" as const,
+        eyebrow: dict.menuPage.eyebrow,
+        title: dict.menuPage.title,
+        accent: dict.menuPage.accent,
+        vegetarian: dict.menuPage.vegetarian,
+        spiceIndicator: dict.menuPage.spiceIndicator,
+        priceNote: dict.menuPage.priceNote,
+        chefSpecial: dict.menuPage.chefSpecial,
+        proteins: {
+          chicken: dict.menuPage.proteins.chicken,
+          lamb: dict.menuPage.proteins.lamb,
+          beef: dict.menuPage.proteins.beef,
+          prawn: dict.menuPage.proteins.prawn,
+          fish: dict.menuPage.proteins.fish,
+          vegetable: dict.menuPage.proteins.vegetable,
+          special: dict.menuPage.proteins.special,
+        },
+        spiceLevels: [
+          dict.menuPage.spice[0],
+          dict.menuPage.spice[1],
+          dict.menuPage.spice[2],
+          dict.menuPage.spice[3],
+          dict.menuPage.spice[4],
+        ],
+        heroImage: menuHeroImage,
+      };
+
+      const existing = await ctx.db
+        .query("menuPageContent")
+        .withIndex("by_locale", (q) => q.eq("locale", locale))
+        .first();
+
+      if (existing) {
+        await ctx.db.patch(existing._id, data);
+      } else {
+        await ctx.db.insert("menuPageContent", { locale, ...data });
+      }
+    }
+
+    return { ok: true };
+  },
+});
+
+// Run: npx convex run seed:contentAssets
+export const contentAssets = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    for (const locale of locales) {
+      const hero = await ctx.db
+        .query("heroContent")
+        .withIndex("by_locale", (q) => q.eq("locale", locale))
+        .first();
+      if (hero) await ctx.db.patch(hero._id, { slides: heroSlides });
+
+      const story = await ctx.db
+        .query("storyContent")
+        .withIndex("by_locale", (q) => q.eq("locale", locale))
+        .first();
+      if (story) await ctx.db.patch(story._id, { image: storyImage });
+
+      const gallery = await ctx.db
+        .query("galleryContent")
+        .withIndex("by_locale", (q) => q.eq("locale", locale))
+        .first();
+      if (gallery) await ctx.db.patch(gallery._id, { images: galleryImages });
+
+      const cta = await ctx.db
+        .query("ctaContent")
+        .withIndex("by_locale", (q) => q.eq("locale", locale))
+        .first();
+      if (cta) await ctx.db.patch(cta._id, { backgroundImage: ctaBackgroundImage });
+
+      const menuPage = await ctx.db
+        .query("menuPageContent")
+        .withIndex("by_locale", (q) => q.eq("locale", locale))
+        .first();
+      if (menuPage) await ctx.db.patch(menuPage._id, { heroImage: menuHeroImage });
+
+      const navbar = await ctx.db
+        .query("navbarContent")
+        .withIndex("by_locale", (q) => q.eq("locale", locale))
+        .first();
+      if (navbar) await ctx.db.patch(navbar._id, { about: dictionaries[locale].nav.about });
+
+      const footer = await ctx.db
+        .query("footerContent")
+        .withIndex("by_locale", (q) => q.eq("locale", locale))
+        .first();
+      if (footer) await ctx.db.patch(footer._id, { designedBy: dictionaries[locale].footer.designedBy });
+    }
+
     return { ok: true };
   },
 });

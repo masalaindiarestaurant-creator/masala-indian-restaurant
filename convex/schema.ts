@@ -12,6 +12,15 @@ const locale = v.union(
 const status = v.union(v.literal("draft"), v.literal("published"));
 
 export default defineSchema({
+  // ─── Assets ───────────────────────────────────────────────────────────────
+
+  assets: defineTable({
+    storageId: v.id("_storage"),
+    filename: v.string(),
+    mimeType: v.string(),
+    originalPath: v.optional(v.string()),
+  }).index("by_original_path", ["originalPath"]),
+
   // ─── Page section content (one row per locale) ───────────────────────────
 
   metaContent: defineTable({
@@ -32,6 +41,7 @@ export default defineSchema({
     reserve: v.string(),
     toggle: v.string(),
     language: v.string(),
+    about: v.optional(v.string()),
   }).index("by_locale", ["locale"]),
 
   heroContent: defineTable({
@@ -44,6 +54,17 @@ export default defineSchema({
     primary: v.string(),
     secondary: v.string(),
     scroll: v.string(),
+    slides: v.optional(
+      v.array(
+        v.object({
+          src: v.string(),
+          srcId: v.optional(v.id("_storage")),
+          alt: v.string(),
+          position: v.string(),
+          accent: v.string(),
+        })
+      )
+    ),
   }).index("by_locale", ["locale"]),
 
   storyContent: defineTable({
@@ -57,6 +78,13 @@ export default defineSchema({
     primary: v.string(),
     secondary: v.string(),
     stat: v.string(),
+    image: v.optional(
+      v.object({
+        src: v.string(),
+        srcId: v.optional(v.id("_storage")),
+        alt: v.string(),
+      })
+    ),
   }).index("by_locale", ["locale"]),
 
   statsContent: defineTable({
@@ -87,6 +115,7 @@ export default defineSchema({
         description: v.string(),
         price: v.string(),
         image: v.string(),
+        srcId: v.optional(v.id("_storage")),
         spice: v.number(),
       })
     ),
@@ -106,6 +135,7 @@ export default defineSchema({
         label: v.string(),
         tagline: v.string(),
         image: v.string(),
+        srcId: v.optional(v.id("_storage")),
       })
     ),
   }).index("by_locale", ["locale"]),
@@ -116,6 +146,17 @@ export default defineSchema({
     eyebrow: v.string(),
     title: v.string(),
     accent: v.string(),
+    images: v.optional(
+      v.array(
+        v.object({
+          src: v.string(),
+          srcId: v.optional(v.id("_storage")),
+          label: v.string(),
+          sub: v.string(),
+          featured: v.optional(v.boolean()),
+        })
+      )
+    ),
   }).index("by_locale", ["locale"]),
 
   valuesContent: defineTable({
@@ -136,6 +177,14 @@ export default defineSchema({
     body: v.string(),
     hours: v.string(),
     addressLine: v.string(),
+    backgroundImage: v.optional(
+      v.object({
+        src: v.string(),
+        srcId: v.optional(v.id("_storage")),
+        alt: v.string(),
+        position: v.optional(v.string()),
+      })
+    ),
   }).index("by_locale", ["locale"]),
 
   footerContent: defineTable({
@@ -151,6 +200,7 @@ export default defineSchema({
     hours: v.string(),
     rights: v.string(),
     crafted: v.string(),
+    designedBy: v.optional(v.string()),
     links: v.object({
       fullMenu: v.string(),
       special: v.string(),
@@ -160,6 +210,36 @@ export default defineSchema({
       chef: v.string(),
       drinks: v.string(),
     }),
+  }).index("by_locale", ["locale"]),
+
+  menuPageContent: defineTable({
+    locale,
+    status,
+    eyebrow: v.string(),
+    title: v.string(),
+    accent: v.string(),
+    vegetarian: v.string(),
+    spiceIndicator: v.string(),
+    priceNote: v.string(),
+    chefSpecial: v.string(),
+    proteins: v.object({
+      chicken: v.string(),
+      lamb: v.string(),
+      beef: v.string(),
+      prawn: v.string(),
+      fish: v.string(),
+      vegetable: v.string(),
+      special: v.string(),
+    }),
+    spiceLevels: v.array(v.string()),
+    heroImage: v.optional(
+      v.object({
+        src: v.string(),
+        srcId: v.optional(v.id("_storage")),
+        alt: v.string(),
+        position: v.string(),
+      })
+    ),
   }).index("by_locale", ["locale"]),
 
   // ─── Menu ─────────────────────────────────────────────────────────────────
@@ -177,6 +257,7 @@ export default defineSchema({
       )
     ),
     bannerImage: v.optional(v.string()),
+    bannerImageId: v.optional(v.id("_storage")),
   }).index("by_slug", ["slug"]),
 
   menuCategoryContent: defineTable({
@@ -208,6 +289,7 @@ export default defineSchema({
     isVegetarian: v.optional(v.boolean()),
     isChefSpecial: v.optional(v.boolean()),
     image: v.optional(v.string()),
+    imageId: v.optional(v.id("_storage")),
     order: v.number(),
   })
     .index("by_slug", ["slug"])

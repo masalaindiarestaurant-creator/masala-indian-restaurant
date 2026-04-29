@@ -25,18 +25,6 @@ export const getCategories = query({
           .filter((q) => q.eq(q.field("status"), "published"))
           .first();
 
-        const fallback = content
-          ? null
-          : await ctx.db
-              .query("menuCategoryContent")
-              .withIndex("by_category_locale", (q) =>
-                q.eq("categoryId", cat._id).eq("locale", "en")
-              )
-              .filter((q) => q.eq(q.field("status"), "published"))
-              .first();
-
-        const resolved = content ?? fallback ?? null;
-
         const items = await ctx.db
           .query("menuItems")
           .withIndex("by_category", (q) => q.eq("categoryId", cat._id))
@@ -51,34 +39,22 @@ export const getCategories = query({
               .withIndex("by_item_locale", (q) =>
                 q.eq("itemId", item._id).eq("locale", locale)
               )
-              .filter((q) => q.eq(q.field("status"), "published"))
-              .first();
-
-                const itemFallback = itemContent
-              ? null
-              : await ctx.db
-                  .query("menuItemContent")
-                  .withIndex("by_item_locale", (q) =>
-                    q.eq("itemId", item._id).eq("locale", "en")
-                  )
                   .filter((q) => q.eq(q.field("status"), "published"))
                   .first();
 
-            const resolvedItem = itemContent ?? itemFallback ?? null;
-
             return {
               ...item,
-              name: resolvedItem?.name ?? "",
-              description: resolvedItem?.description,
-              note: resolvedItem?.note,
+              name: itemContent?.name ?? "",
+              description: itemContent?.description,
+              note: itemContent?.note,
             };
           })
         );
 
         return {
           ...cat,
-          label: resolved?.label ?? "",
-          description: resolved?.description,
+          label: content?.label ?? "",
+          description: content?.description,
           items: localizedItems,
         };
       })
