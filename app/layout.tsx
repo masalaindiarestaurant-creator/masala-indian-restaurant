@@ -30,6 +30,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={marcellus.variable} data-scroll-behavior="smooth">
       <head>
+        <script dangerouslySetInnerHTML={{__html:`(function(){try{if(!sessionStorage.getItem('masala-entry-transition-complete')){var s=document.createElement('style');s.id='entry-block';s.textContent='body{visibility:hidden}';document.head.appendChild(s);}}catch(e){}})();`}} />
+        <noscript><style>{`body{visibility:visible!important}`}</style></noscript>
         <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="shortcut icon" href="/favicon.ico" />
