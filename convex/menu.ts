@@ -41,9 +41,13 @@ export const getCategories = query({
               )
                   .filter((q) => q.eq(q.field("status"), "published"))
                   .first();
+            const imageFromStorage = item.imageId
+              ? await ctx.storage.getUrl(item.imageId)
+              : null;
 
             return {
               ...item,
+              image: imageFromStorage ?? item.image,
               name: itemContent?.name ?? "",
               description: itemContent?.description,
               note: itemContent?.note,
@@ -94,7 +98,14 @@ export const getCategoryWithContent = query({
           .query("menuItemContent")
           .withIndex("by_item_locale", (q) => q.eq("itemId", item._id))
           .collect();
-        return { ...item, contents: itemContents };
+        const imageFromStorage = item.imageId
+          ? await ctx.storage.getUrl(item.imageId)
+          : null;
+        return {
+          ...item,
+          image: imageFromStorage ?? item.image,
+          contents: itemContents,
+        };
       })
     );
 

@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { useEffect, useState } from "react";
+import { ConvexProvider, ConvexReactClient, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { formatRelativeTime } from "./sections/[section]/_components/diff";
+import { Button } from "@/components/ui/button";
+import { Menu, X } from "lucide-react";
 
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -21,11 +26,46 @@ const SECTIONS = [
   { key: "meta", label: "SEO / Meta" },
 ];
 
-function Sidebar() {
+type SectionBuckets = Record<
+  string,
+  Record<string, { draft: { lastEditedAt?: number } | null; published: { lastEditedAt?: number } | null }>
+>;
+
+function lastEditedForSection(
+  data: SectionBuckets | undefined,
+  section: string
+): number | null {
+  if (!data) return null;
+  const buckets = data[section];
+  if (!buckets) return null;
+  let max = 0;
+  for (const locale of Object.keys(buckets)) {
+    const { draft, published } = buckets[locale];
+    if (draft?.lastEditedAt && draft.lastEditedAt > max) max = draft.lastEditedAt;
+    if (published?.lastEditedAt && published.lastEditedAt > max)
+      max = published.lastEditedAt;
+  }
+  return max || null;
+}
+
+function hasDraftForSection(
+  data: SectionBuckets | undefined,
+  section: string
+): boolean {
+  if (!data) return false;
+  const buckets = data[section];
+  if (!buckets) return false;
+  return Object.values(buckets).some((b) => b.draft);
+}
+
+function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const path = usePathname();
+  const data = useQuery(api.content.getAdminSections) as
+    | SectionBuckets
+    | undefined;
 
   return (
-    <aside className="w-64 min-h-screen bg-zinc-950 border-r border-zinc-800 flex flex-col">
+    <aside className="flex h-full w-64 flex-col border-r border-zinc-800 bg-zinc-950">
       <div className="px-6 py-5 border-b border-zinc-800">
         <p className="text-xs text-zinc-500 uppercase tracking-widest">Masala CMS</p>
         <p className="text-white font-semibold mt-0.5">Admin</p>
@@ -36,17 +76,33 @@ function Sidebar() {
         {SECTIONS.map((s) => {
           const href = `/admin/sections/${s.key}`;
           const active = path.startsWith(href);
+          const lastEdited = lastEditedForSection(data, s.key);
+          const hasDraft = hasDraftForSection(data, s.key);
           return (
             <Link
               key={s.key}
               href={href}
+              onClick={onNavigate}
               className={`block px-3 py-2 rounded-md text-sm transition-colors ${
                 active
                   ? "bg-zinc-800 text-white"
                   : "text-zinc-400 hover:text-white hover:bg-zinc-900"
               }`}
             >
-              {s.label}
+              <div className="flex items-center justify-between gap-2">
+                <span className="truncate">{s.label}</span>
+                {hasDraft && (
+                  <span
+                    className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"
+                    title="Has unpublished draft"
+                  />
+                )}
+              </div>
+              {lastEdited && (
+                <p className="text-[10px] text-zinc-600 mt-0.5">
+                  {formatRelativeTime(lastEdited)}
+                </p>
+              )}
             </Link>
           );
         })}
@@ -55,6 +111,7 @@ function Sidebar() {
           <p className="px-3 mb-2 text-xs text-zinc-500 uppercase tracking-widest">Menu</p>
           <Link
             href="/admin/menu"
+            onClick={onNavigate}
             className={`block px-3 py-2 rounded-md text-sm transition-colors ${
               path.startsWith("/admin/menu")
                 ? "bg-zinc-800 text-white"
@@ -80,11 +137,72 @@ function Sidebar() {
 }
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  useEffect(() => {
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    const previousBodyOverflow = document.body.style.overflow;
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      document.body.style.overflow = previousBodyOverflow;
+    };
+  }, []);
+
   return (
     <ConvexProvider client={convex}>
-      <div className="flex min-h-screen bg-zinc-900 text-white">
-        <Sidebar />
-        <main className="flex-1 overflow-y-auto">{children}</main>
+      <div className="fixed inset-0 flex overflow-hidden bg-zinc-900 text-white">
+        <div className="fixed inset-y-0 left-0 z-40 hidden lg:block">
+          <Sidebar />
+        </div>
+
+        <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-zinc-800 bg-zinc-950/95 px-4 backdrop-blur lg:hidden">
+          <div>
+            <p className="text-[10px] uppercase tracking-widest text-zinc-500">
+              Masala CMS
+            </p>
+            <p className="text-sm font-semibold text-white">Admin</p>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="Open admin navigation"
+            onClick={() => setMobileNavOpen(true)}
+            className="text-zinc-200 hover:bg-zinc-800 hover:text-white"
+          >
+            <Menu className="size-5" />
+          </Button>
+        </header>
+
+        {mobileNavOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <button
+              type="button"
+              aria-label="Close admin navigation"
+              className="absolute inset-0 bg-black/60"
+              onClick={() => setMobileNavOpen(false)}
+            />
+            <div className="absolute inset-y-0 left-0 w-64 max-w-[85vw] shadow-2xl">
+              <Sidebar onNavigate={() => setMobileNavOpen(false)} />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Close admin navigation"
+                onClick={() => setMobileNavOpen(false)}
+                className="absolute right-3 top-3 text-zinc-300 hover:bg-zinc-800 hover:text-white"
+              >
+                <X className="size-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <main className="h-full min-w-0 flex-1 overflow-hidden pt-14 lg:ml-64 lg:pt-0">
+          {children}
+        </main>
       </div>
     </ConvexProvider>
   );

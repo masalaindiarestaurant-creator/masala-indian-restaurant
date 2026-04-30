@@ -265,7 +265,7 @@ export const menuPageContent = internalMutation({
 
       const existing = await ctx.db
         .query("menuPageContent")
-        .withIndex("by_locale", (q) => q.eq("locale", locale))
+        .withIndex("by_locale_status", (q) => q.eq("locale", locale).eq("status", "published"))
         .first();
 
       if (existing) {
@@ -286,43 +286,43 @@ export const contentAssets = internalMutation({
     for (const locale of locales) {
       const hero = await ctx.db
         .query("heroContent")
-        .withIndex("by_locale", (q) => q.eq("locale", locale))
+        .withIndex("by_locale_status", (q) => q.eq("locale", locale).eq("status", "published"))
         .first();
       if (hero) await ctx.db.patch(hero._id, { slides: heroSlides });
 
       const story = await ctx.db
         .query("storyContent")
-        .withIndex("by_locale", (q) => q.eq("locale", locale))
+        .withIndex("by_locale_status", (q) => q.eq("locale", locale).eq("status", "published"))
         .first();
       if (story) await ctx.db.patch(story._id, { image: storyImage });
 
       const gallery = await ctx.db
         .query("galleryContent")
-        .withIndex("by_locale", (q) => q.eq("locale", locale))
+        .withIndex("by_locale_status", (q) => q.eq("locale", locale).eq("status", "published"))
         .first();
       if (gallery) await ctx.db.patch(gallery._id, { images: galleryImages });
 
       const cta = await ctx.db
         .query("ctaContent")
-        .withIndex("by_locale", (q) => q.eq("locale", locale))
+        .withIndex("by_locale_status", (q) => q.eq("locale", locale).eq("status", "published"))
         .first();
       if (cta) await ctx.db.patch(cta._id, { backgroundImage: ctaBackgroundImage });
 
       const menuPage = await ctx.db
         .query("menuPageContent")
-        .withIndex("by_locale", (q) => q.eq("locale", locale))
+        .withIndex("by_locale_status", (q) => q.eq("locale", locale).eq("status", "published"))
         .first();
       if (menuPage) await ctx.db.patch(menuPage._id, { heroImage: menuHeroImage });
 
       const navbar = await ctx.db
         .query("navbarContent")
-        .withIndex("by_locale", (q) => q.eq("locale", locale))
+        .withIndex("by_locale_status", (q) => q.eq("locale", locale).eq("status", "published"))
         .first();
       if (navbar) await ctx.db.patch(navbar._id, { about: dictionaries[locale].nav.about });
 
       const footer = await ctx.db
         .query("footerContent")
-        .withIndex("by_locale", (q) => q.eq("locale", locale))
+        .withIndex("by_locale_status", (q) => q.eq("locale", locale).eq("status", "published"))
         .first();
       if (footer) await ctx.db.patch(footer._id, { designedBy: dictionaries[locale].footer.designedBy });
     }

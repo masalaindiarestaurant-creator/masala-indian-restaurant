@@ -21,20 +21,22 @@ export default defineSchema({
     originalPath: v.optional(v.string()),
   }).index("by_original_path", ["originalPath"]),
 
-  // ─── Page section content (one row per locale) ───────────────────────────
+  // ─── Page section content (one row per locale per status: draft + published) ─
 
   metaContent: defineTable({
     locale,
     status,
+    lastEditedAt: v.optional(v.number()),
     homeTitle: v.string(),
     homeDescription: v.string(),
     menuTitle: v.string(),
     menuDescription: v.string(),
-  }).index("by_locale", ["locale"]),
+  }).index("by_locale_status", ["locale", "status"]),
 
   navbarContent: defineTable({
     locale,
     status,
+    lastEditedAt: v.optional(v.number()),
     brandName: v.string(),
     brandDescriptor: v.string(),
     links: v.array(v.object({ key: v.string(), label: v.string() })),
@@ -42,11 +44,12 @@ export default defineSchema({
     toggle: v.string(),
     language: v.string(),
     about: v.optional(v.string()),
-  }).index("by_locale", ["locale"]),
+  }).index("by_locale_status", ["locale", "status"]),
 
   heroContent: defineTable({
     locale,
     status,
+    lastEditedAt: v.optional(v.number()),
     eyebrow: v.string(),
     titleTop: v.string(),
     titleAccent: v.string(),
@@ -65,11 +68,12 @@ export default defineSchema({
         })
       )
     ),
-  }).index("by_locale", ["locale"]),
+  }).index("by_locale_status", ["locale", "status"]),
 
   storyContent: defineTable({
     locale,
     status,
+    lastEditedAt: v.optional(v.number()),
     eyebrow: v.string(),
     title: v.string(),
     accent: v.string(),
@@ -85,11 +89,12 @@ export default defineSchema({
         alt: v.string(),
       })
     ),
-  }).index("by_locale", ["locale"]),
+  }).index("by_locale_status", ["locale", "status"]),
 
   statsContent: defineTable({
     locale,
     status,
+    lastEditedAt: v.optional(v.number()),
     items: v.array(
       v.object({
         value: v.number(),
@@ -99,11 +104,12 @@ export default defineSchema({
         label: v.string(),
       })
     ),
-  }).index("by_locale", ["locale"]),
+  }).index("by_locale_status", ["locale", "status"]),
 
   featuredContent: defineTable({
     locale,
     status,
+    lastEditedAt: v.optional(v.number()),
     eyebrow: v.string(),
     title: v.string(),
     accent: v.string(),
@@ -119,11 +125,12 @@ export default defineSchema({
         spice: v.number(),
       })
     ),
-  }).index("by_locale", ["locale"]),
+  }).index("by_locale_status", ["locale", "status"]),
 
   menuPreviewContent: defineTable({
     locale,
     status,
+    lastEditedAt: v.optional(v.number()),
     eyebrow: v.string(),
     title: v.string(),
     accent: v.string(),
@@ -138,11 +145,12 @@ export default defineSchema({
         srcId: v.optional(v.id("_storage")),
       })
     ),
-  }).index("by_locale", ["locale"]),
+  }).index("by_locale_status", ["locale", "status"]),
 
   galleryContent: defineTable({
     locale,
     status,
+    lastEditedAt: v.optional(v.number()),
     eyebrow: v.string(),
     title: v.string(),
     accent: v.string(),
@@ -157,20 +165,22 @@ export default defineSchema({
         })
       )
     ),
-  }).index("by_locale", ["locale"]),
+  }).index("by_locale_status", ["locale", "status"]),
 
   valuesContent: defineTable({
     locale,
     status,
+    lastEditedAt: v.optional(v.number()),
     eyebrow: v.string(),
     title: v.string(),
     accent: v.string(),
     items: v.array(v.object({ title: v.string(), text: v.string() })),
-  }).index("by_locale", ["locale"]),
+  }).index("by_locale_status", ["locale", "status"]),
 
   ctaContent: defineTable({
     locale,
     status,
+    lastEditedAt: v.optional(v.number()),
     eyebrow: v.string(),
     title: v.string(),
     accent: v.string(),
@@ -185,11 +195,12 @@ export default defineSchema({
         position: v.optional(v.string()),
       })
     ),
-  }).index("by_locale", ["locale"]),
+  }).index("by_locale_status", ["locale", "status"]),
 
   footerContent: defineTable({
     locale,
     status,
+    lastEditedAt: v.optional(v.number()),
     summary: v.string(),
     navigation: v.string(),
     menu: v.string(),
@@ -210,11 +221,12 @@ export default defineSchema({
       chef: v.string(),
       drinks: v.string(),
     }),
-  }).index("by_locale", ["locale"]),
+  }).index("by_locale_status", ["locale", "status"]),
 
   menuPageContent: defineTable({
     locale,
     status,
+    lastEditedAt: v.optional(v.number()),
     eyebrow: v.string(),
     title: v.string(),
     accent: v.string(),
@@ -240,7 +252,16 @@ export default defineSchema({
         position: v.string(),
       })
     ),
-  }).index("by_locale", ["locale"]),
+  }).index("by_locale_status", ["locale", "status"]),
+
+  // ─── Revisions (publish snapshots) ────────────────────────────────────────
+
+  contentRevisions: defineTable({
+    section: v.string(),
+    locale: v.string(),
+    snapshot: v.any(),
+    publishedAt: v.number(),
+  }).index("by_section_locale", ["section", "locale"]),
 
   // ─── Menu ─────────────────────────────────────────────────────────────────
 

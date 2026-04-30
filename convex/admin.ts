@@ -10,35 +10,140 @@ const locale = v.union(
   v.literal("no")
 );
 
-const status = v.union(v.literal("draft"), v.literal("published"));
+// Section name → table name. Used by publish/discard/restore (which need to
+// route by section without re-validating every section's full schema).
+const SECTION_TABLES: Record<string, string> = {
+  meta: "metaContent",
+  navbar: "navbarContent",
+  hero: "heroContent",
+  story: "storyContent",
+  stats: "statsContent",
+  featured: "featuredContent",
+  menuPreview: "menuPreviewContent",
+  gallery: "galleryContent",
+  values: "valuesContent",
+  cta: "ctaContent",
+  footer: "footerContent",
+  menuPage: "menuPageContent",
+};
 
-// Generic upsert for any section table
-async function upsertSection(
+const sectionName = v.union(
+  v.literal("meta"),
+  v.literal("navbar"),
+  v.literal("hero"),
+  v.literal("story"),
+  v.literal("stats"),
+  v.literal("featured"),
+  v.literal("menuPreview"),
+  v.literal("gallery"),
+  v.literal("values"),
+  v.literal("cta"),
+  v.literal("footer"),
+  v.literal("menuPage")
+);
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+// Upsert the **draft** row for a given locale on a section table.
+// Never touches the published row.
+async function saveDraftRow(
   ctx: MutationCtx,
   table: string,
   localeVal: string,
   data: Record<string, unknown>
 ) {
-  // The admin screen intentionally routes multiple content tables through one helper.
-  // Convex cannot strongly type this dynamic table access, so keep the escape hatch local.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = ctx.db as any;
   const existing = await db
     .query(table)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .withIndex("by_locale", (q: any) => q.eq("locale", localeVal))
+    .withIndex("by_locale_status", (q: any) =>
+      q.eq("locale", localeVal).eq("status", "draft")
+    )
     .first();
+  const payload = { ...data, lastEditedAt: Date.now() };
   if (existing) {
-    await db.patch(existing._id, data);
+    await db.patch(existing._id, payload);
     return existing._id;
   }
-  return db.insert(table, { locale: localeVal, ...data });
+  return db.insert(table, {
+    locale: localeVal,
+    status: "draft",
+    ...payload,
+  });
 }
 
-export const upsertHero = mutation({
+// Publish: copy draft → published, snapshot to revisions, delete draft.
+// If no draft exists for that locale, no-op.
+async function publishRow(
+  ctx: MutationCtx,
+  section: string,
+  table: string,
+  localeVal: string
+) {
+  const db = ctx.db as any;
+  const draft = await db
+    .query(table)
+    .withIndex("by_locale_status", (q: any) =>
+      q.eq("locale", localeVal).eq("status", "draft")
+    )
+    .first();
+  if (!draft) return null;
+
+  const published = await db
+    .query(table)
+    .withIndex("by_locale_status", (q: any) =>
+      q.eq("locale", localeVal).eq("status", "published")
+    )
+    .first();
+
+  const { _id: _draftId, _creationTime: _draftCt, status: _ds, ...draftFields } = draft;
+  const now = Date.now();
+  const fields = { ...draftFields, lastEditedAt: now };
+
+  let publishedId;
+  if (published) {
+    await db.patch(published._id, fields);
+    publishedId = published._id;
+  } else {
+    publishedId = await db.insert(table, {
+      ...fields,
+      locale: localeVal,
+      status: "published",
+    });
+  }
+
+  const newPublished = await db.get(publishedId);
+  const { _id: _pid, _creationTime: _pct, ...snapshotFields } = newPublished;
+  await db.insert("contentRevisions", {
+    section,
+    locale: localeVal,
+    snapshot: snapshotFields,
+    publishedAt: now,
+  });
+
+  await db.delete(draft._id);
+  return publishedId;
+}
+
+async function discardDraftRow(
+  ctx: MutationCtx,
+  table: string,
+  localeVal: string
+) {
+  const db = ctx.db as any;
+  const draft = await db
+    .query(table)
+    .withIndex("by_locale_status", (q: any) =>
+      q.eq("locale", localeVal).eq("status", "draft")
+    )
+    .first();
+  if (draft) await db.delete(draft._id);
+}
+
+// ─── Per-section saveDraft mutations (typed args) ─────────────────────────
+
+export const saveDraftHero = mutation({
   args: {
     locale,
-    status,
     eyebrow: v.string(),
     titleTop: v.string(),
     titleAccent: v.string(),
@@ -59,45 +164,42 @@ export const upsertHero = mutation({
     ),
   },
   handler: async (ctx, { locale, ...data }) => {
-    return upsertSection(ctx, "heroContent", locale, data);
+    return saveDraftRow(ctx, "heroContent", locale, data);
   },
 });
 
-export const upsertMeta = mutation({
+export const saveDraftMeta = mutation({
   args: {
     locale,
-    status,
     homeTitle: v.string(),
     homeDescription: v.string(),
     menuTitle: v.string(),
     menuDescription: v.string(),
   },
   handler: async (ctx, { locale, ...data }) => {
-    return upsertSection(ctx, "metaContent", locale, data);
+    return saveDraftRow(ctx, "metaContent", locale, data);
   },
 });
 
-export const upsertNavbar = mutation({
+export const saveDraftNavbar = mutation({
   args: {
     locale,
-    status,
     brandName: v.string(),
     brandDescriptor: v.string(),
     links: v.array(v.object({ key: v.string(), label: v.string() })),
     reserve: v.string(),
     toggle: v.string(),
     language: v.string(),
-    about: v.string(),
+    about: v.optional(v.string()),
   },
   handler: async (ctx, { locale, ...data }) => {
-    return upsertSection(ctx, "navbarContent", locale, data);
+    return saveDraftRow(ctx, "navbarContent", locale, data);
   },
 });
 
-export const upsertStory = mutation({
+export const saveDraftStory = mutation({
   args: {
     locale,
-    status,
     eyebrow: v.string(),
     title: v.string(),
     accent: v.string(),
@@ -115,14 +217,13 @@ export const upsertStory = mutation({
     ),
   },
   handler: async (ctx, { locale, ...data }) => {
-    return upsertSection(ctx, "storyContent", locale, data);
+    return saveDraftRow(ctx, "storyContent", locale, data);
   },
 });
 
-export const upsertStats = mutation({
+export const saveDraftStats = mutation({
   args: {
     locale,
-    status,
     items: v.array(
       v.object({
         value: v.number(),
@@ -134,14 +235,13 @@ export const upsertStats = mutation({
     ),
   },
   handler: async (ctx, { locale, ...data }) => {
-    return upsertSection(ctx, "statsContent", locale, data);
+    return saveDraftRow(ctx, "statsContent", locale, data);
   },
 });
 
-export const upsertFeatured = mutation({
+export const saveDraftFeatured = mutation({
   args: {
     locale,
-    status,
     eyebrow: v.string(),
     title: v.string(),
     accent: v.string(),
@@ -153,19 +253,19 @@ export const upsertFeatured = mutation({
         description: v.string(),
         price: v.string(),
         image: v.string(),
+        srcId: v.optional(v.id("_storage")),
         spice: v.number(),
       })
     ),
   },
   handler: async (ctx, { locale, ...data }) => {
-    return upsertSection(ctx, "featuredContent", locale, data);
+    return saveDraftRow(ctx, "featuredContent", locale, data);
   },
 });
 
-export const upsertMenuPreview = mutation({
+export const saveDraftMenuPreview = mutation({
   args: {
     locale,
-    status,
     eyebrow: v.string(),
     title: v.string(),
     accent: v.string(),
@@ -177,18 +277,18 @@ export const upsertMenuPreview = mutation({
         label: v.string(),
         tagline: v.string(),
         image: v.string(),
+        srcId: v.optional(v.id("_storage")),
       })
     ),
   },
   handler: async (ctx, { locale, ...data }) => {
-    return upsertSection(ctx, "menuPreviewContent", locale, data);
+    return saveDraftRow(ctx, "menuPreviewContent", locale, data);
   },
 });
 
-export const upsertGallery = mutation({
+export const saveDraftGallery = mutation({
   args: {
     locale,
-    status,
     eyebrow: v.string(),
     title: v.string(),
     accent: v.string(),
@@ -205,28 +305,26 @@ export const upsertGallery = mutation({
     ),
   },
   handler: async (ctx, { locale, ...data }) => {
-    return upsertSection(ctx, "galleryContent", locale, data);
+    return saveDraftRow(ctx, "galleryContent", locale, data);
   },
 });
 
-export const upsertValues = mutation({
+export const saveDraftValues = mutation({
   args: {
     locale,
-    status,
     eyebrow: v.string(),
     title: v.string(),
     accent: v.string(),
     items: v.array(v.object({ title: v.string(), text: v.string() })),
   },
   handler: async (ctx, { locale, ...data }) => {
-    return upsertSection(ctx, "valuesContent", locale, data);
+    return saveDraftRow(ctx, "valuesContent", locale, data);
   },
 });
 
-export const upsertCta = mutation({
+export const saveDraftCta = mutation({
   args: {
     locale,
-    status,
     eyebrow: v.string(),
     title: v.string(),
     accent: v.string(),
@@ -243,14 +341,13 @@ export const upsertCta = mutation({
     ),
   },
   handler: async (ctx, { locale, ...data }) => {
-    return upsertSection(ctx, "ctaContent", locale, data);
+    return saveDraftRow(ctx, "ctaContent", locale, data);
   },
 });
 
-export const upsertFooter = mutation({
+export const saveDraftFooter = mutation({
   args: {
     locale,
-    status,
     summary: v.string(),
     navigation: v.string(),
     menu: v.string(),
@@ -261,7 +358,7 @@ export const upsertFooter = mutation({
     hours: v.string(),
     rights: v.string(),
     crafted: v.string(),
-    designedBy: v.string(),
+    designedBy: v.optional(v.string()),
     links: v.object({
       fullMenu: v.string(),
       special: v.string(),
@@ -273,14 +370,13 @@ export const upsertFooter = mutation({
     }),
   },
   handler: async (ctx, { locale, ...data }) => {
-    return upsertSection(ctx, "footerContent", locale, data);
+    return saveDraftRow(ctx, "footerContent", locale, data);
   },
 });
 
-export const upsertMenuPage = mutation({
+export const saveDraftMenuPage = mutation({
   args: {
     locale,
-    status,
     eyebrow: v.string(),
     title: v.string(),
     accent: v.string(),
@@ -308,11 +404,47 @@ export const upsertMenuPage = mutation({
     ),
   },
   handler: async (ctx, { locale, ...data }) => {
-    return upsertSection(ctx, "menuPageContent", locale, data);
+    return saveDraftRow(ctx, "menuPageContent", locale, data);
   },
 });
 
-// Menu category content
+// ─── Generic publish / discard / restore ──────────────────────────────────
+
+export const publishSectionLocale = mutation({
+  args: { section: sectionName, locale },
+  handler: async (ctx, { section, locale }) => {
+    const table = SECTION_TABLES[section];
+    return publishRow(ctx, section, table, locale);
+  },
+});
+
+export const discardDraft = mutation({
+  args: { section: sectionName, locale },
+  handler: async (ctx, { section, locale }) => {
+    const table = SECTION_TABLES[section];
+    return discardDraftRow(ctx, table, locale);
+  },
+});
+
+export const restoreRevision = mutation({
+  args: { revisionId: v.id("contentRevisions") },
+  handler: async (ctx, { revisionId }) => {
+    const db = ctx.db as any;
+    const revision = await db.get(revisionId);
+    if (!revision) throw new Error("Revision not found");
+    const table = SECTION_TABLES[revision.section];
+    if (!table) throw new Error(`Unknown section: ${revision.section}`);
+
+    const { locale: _locale, status: _status, lastEditedAt: _le, ...fields } =
+      revision.snapshot ?? {};
+    return saveDraftRow(ctx, table, revision.locale, fields);
+  },
+});
+
+// ─── Menu (unchanged for now) ─────────────────────────────────────────────
+
+const status = v.union(v.literal("draft"), v.literal("published"));
+
 export const upsertMenuCategoryContent = mutation({
   args: {
     categoryId: v.id("menuCategories"),
@@ -340,7 +472,6 @@ export const upsertMenuCategoryContent = mutation({
   },
 });
 
-// Menu item content
 export const upsertMenuItemContent = mutation({
   args: {
     itemId: v.id("menuItems"),
@@ -365,7 +496,6 @@ export const upsertMenuItemContent = mutation({
   },
 });
 
-// Menu item base data
 export const upsertMenuItem = mutation({
   args: {
     id: v.optional(v.id("menuItems")),
@@ -389,20 +519,36 @@ export const upsertMenuItem = mutation({
     isVegetarian: v.optional(v.boolean()),
     isChefSpecial: v.optional(v.boolean()),
     image: v.optional(v.string()),
+    imageId: v.optional(v.id("_storage")),
     order: v.number(),
   },
-  handler: async (ctx, { id, ...data }) => {
+  handler: async (ctx, { id, image, imageId, ...data }) => {
+    const resolvedImage = imageId ? await ctx.storage.getUrl(imageId) : null;
+    const payload = {
+      ...data,
+      image: resolvedImage ?? image,
+      imageId,
+    };
+
     if (id) {
-      await ctx.db.patch(id, data);
+      await ctx.db.patch(id, payload);
       return id;
     }
-    return ctx.db.insert("menuItems", data);
+    return ctx.db.insert("menuItems", payload);
   },
 });
 
+export const generateUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    return ctx.storage.generateUploadUrl();
+  },
+});
+
+// Keep legacy menu publish/unpublish helpers (used by menu admin only).
 export const publishSection = mutation({
   args: { table: v.string(), id: v.string() },
-  handler: async (ctx, { table, id }) => {
+  handler: async (ctx, { id }) => {
     // @ts-expect-error dynamic
     await ctx.db.patch(id, { status: "published" });
   },
@@ -410,7 +556,7 @@ export const publishSection = mutation({
 
 export const unpublishSection = mutation({
   args: { table: v.string(), id: v.string() },
-  handler: async (ctx, { table, id }) => {
+  handler: async (ctx, { id }) => {
     // @ts-expect-error dynamic
     await ctx.db.patch(id, { status: "draft" });
   },

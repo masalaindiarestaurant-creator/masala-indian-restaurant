@@ -11,6 +11,8 @@
 import type * as admin from "../admin.js";
 import type * as content from "../content.js";
 import type * as menu from "../menu.js";
+import type * as migrations from "../migrations.js";
+import type * as revisions from "../revisions.js";
 import type * as seed from "../seed.js";
 
 import type {
@@ -23,6 +25,8 @@ declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   content: typeof content;
   menu: typeof menu;
+  migrations: typeof migrations;
+  revisions: typeof revisions;
   seed: typeof seed;
 }>;
 

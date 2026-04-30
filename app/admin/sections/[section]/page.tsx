@@ -3,16 +3,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { use, useState } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Toaster } from "@/components/ui/sonner";
-import { toast } from "sonner";
+import { FieldLabel } from "./_components/FieldLabel";
+import { VersionPanel } from "./_components/VersionPanel";
+import { isFieldDirty } from "./_components/diff";
 
 const LOCALES = [
   { code: "en", label: "English" },
@@ -23,6 +23,20 @@ const LOCALES = [
 ] as const;
 
 type Locale = (typeof LOCALES)[number]["code"];
+
+type Section =
+  | "meta"
+  | "navbar"
+  | "hero"
+  | "story"
+  | "stats"
+  | "featured"
+  | "menuPreview"
+  | "gallery"
+  | "values"
+  | "cta"
+  | "footer"
+  | "menuPage";
 
 const SECTION_LABELS: Record<string, string> = {
   navbar: "Navbar",
@@ -39,29 +53,53 @@ const SECTION_LABELS: Record<string, string> = {
   meta: "SEO / Meta",
 };
 
+const SECTION_HINTS: Record<string, string> = {
+  hero: "The main banner customers see when they land on the homepage.",
+  navbar: "Top navigation bar — brand name, links, language toggle.",
+  story: "About-us section telling the restaurant's story.",
+  stats: "Number tiles like '10K+ guests served'.",
+  featured: "Highlighted dishes shown on the homepage.",
+  menuPreview: "Category teasers shown above the full menu link.",
+  gallery: "Photo gallery section.",
+  values: "Pillars / values cards (e.g. 'Authentic recipes').",
+  cta: "Closing call-to-action panel near the footer.",
+  footer: "Footer text, address, contact details.",
+  menuPage: "Headings and labels shown on the dedicated /menu page.",
+  meta: "Page titles & descriptions for search engines.",
+};
+
+// ─── Generic field components ─────────────────────────────────────────────
+
 function Field({
   label,
+  description,
   value,
   onChange,
+  isDirty,
   multiline = false,
+  type = "text",
 }: {
   label: string;
-  value: string;
+  description?: string;
+  value: string | number;
   onChange: (v: string) => void;
+  isDirty?: boolean;
   multiline?: boolean;
+  type?: string;
 }) {
   return (
-    <div className="space-y-1.5">
-      <Label className="text-zinc-300 text-xs uppercase tracking-wide">{label}</Label>
+    <div>
+      <FieldLabel label={label} description={description} isDirty={isDirty} />
       {multiline ? (
         <Textarea
-          value={value}
+          value={value as string}
           onChange={(e) => onChange(e.target.value)}
           className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 resize-none min-h-[80px]"
         />
       ) : (
         <Input
-          value={value}
+          type={type}
+          value={value as any}
           onChange={(e) => onChange(e.target.value)}
           className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
         />
@@ -70,76 +108,129 @@ function Field({
   );
 }
 
-function HeroEditor({ data, locale }: { data: any; locale: Locale }) {
-  const upsert = useMutation(api.admin.upsertHero);
-  const [fields, setFields] = useState({
-    eyebrow: data?.eyebrow ?? "",
-    titleTop: data?.titleTop ?? "",
-    titleAccent: data?.titleAccent ?? "",
-    body: data?.body ?? "",
-    primary: data?.primary ?? "",
-    secondary: data?.secondary ?? "",
-    scroll: data?.scroll ?? "",
-  });
-
-  const set = (k: string) => (v: string) => setFields((f) => ({ ...f, [k]: v }));
-
-  async function save(status: "draft" | "published") {
-    await upsert({ locale, status, ...fields });
-    toast.success(status === "published" ? "Published" : "Saved as draft");
-  }
-
+// Helper: builds Field props given buffer/setBuffer/published.
+function useFieldFactory(
+  buffer: any,
+  setBuffer: (u: (b: any) => any) => void,
+  published: any
+) {
   return (
-    <EditorShell data={data} onSave={save}>
-      <Field label="Eyebrow" value={fields.eyebrow} onChange={set("eyebrow")} />
-      <Field label="Title (top)" value={fields.titleTop} onChange={set("titleTop")} />
-      <Field label="Title (accent)" value={fields.titleAccent} onChange={set("titleAccent")} />
-      <Field label="Body" value={fields.body} onChange={set("body")} multiline />
-      <Field label="Primary CTA" value={fields.primary} onChange={set("primary")} />
-      <Field label="Secondary CTA" value={fields.secondary} onChange={set("secondary")} />
-      <Field label="Scroll label" value={fields.scroll} onChange={set("scroll")} />
-    </EditorShell>
+    key: string,
+    label: string,
+    opts?: { description?: string; multiline?: boolean; type?: string }
+  ) => ({
+    label,
+    description: opts?.description,
+    multiline: opts?.multiline,
+    type: opts?.type,
+    value: buffer?.[key] ?? "",
+    onChange: (v: string) =>
+      setBuffer((b: any) => ({
+        ...b,
+        [key]: opts?.type === "number" ? Number(v) : v,
+      })),
+    isDirty: isFieldDirty(buffer, published, key),
+  });
+}
+
+// ─── Per-section editors ──────────────────────────────────────────────────
+
+function HeroEditor({ buffer, setBuffer, published }: EditorProps) {
+  const f = useFieldFactory(buffer, setBuffer, published);
+  return (
+    <div className="space-y-4">
+      <Field
+        {...f("eyebrow", "Eyebrow", {
+          description: "Small text above the main title.",
+        })}
+      />
+      <Field
+        {...f("titleTop", "Title (top)", {
+          description: "First line of the hero headline.",
+        })}
+      />
+      <Field
+        {...f("titleAccent", "Title (accent)", {
+          description: "Highlighted second line, usually in a different color.",
+        })}
+      />
+      <Field
+        {...f("body", "Body", {
+          description: "Short intro paragraph below the headline.",
+          multiline: true,
+        })}
+      />
+      <Field
+        {...f("primary", "Primary CTA", {
+          description: "Main button label (e.g. 'Explore Menu').",
+        })}
+      />
+      <Field
+        {...f("secondary", "Secondary CTA", {
+          description: "Secondary button label (e.g. 'Reserve a Table').",
+        })}
+      />
+      <Field
+        {...f("scroll", "Scroll label", {
+          description: "Text shown next to the scroll-down indicator.",
+        })}
+      />
+    </div>
   );
 }
 
-function NavbarEditor({ data, locale }: { data: any; locale: Locale }) {
-  const upsert = useMutation(api.admin.upsertNavbar);
-  const [fields, setFields] = useState({
-    brandName: data?.brandName ?? "",
-    brandDescriptor: data?.brandDescriptor ?? "",
-    reserve: data?.reserve ?? "",
-    toggle: data?.toggle ?? "",
-    language: data?.language ?? "",
-    about: data?.about ?? "",
-    links: data?.links ?? [],
-  });
-
-  const set = (k: string) => (v: string) => setFields((f) => ({ ...f, [k]: v }));
+function NavbarEditor({ buffer, setBuffer, published }: EditorProps) {
+  const f = useFieldFactory(buffer, setBuffer, published);
+  const links: any[] = buffer?.links ?? [];
   const setLink = (i: number, v: string) =>
-    setFields((f) => ({
-      ...f,
-      links: f.links.map((l: any, idx: number) => (idx === i ? { ...l, label: v } : l)),
+    setBuffer((b: any) => ({
+      ...b,
+      links: (b.links ?? []).map((l: any, idx: number) =>
+        idx === i ? { ...l, label: v } : l
+      ),
     }));
-
-  async function save(status: "draft" | "published") {
-    await upsert({ locale, status, ...fields });
-    toast.success(status === "published" ? "Published" : "Saved as draft");
-  }
-
   return (
-    <EditorShell data={data} onSave={save}>
-      <Field label="Brand Name" value={fields.brandName} onChange={set("brandName")} />
-      <Field label="Brand Descriptor" value={fields.brandDescriptor} onChange={set("brandDescriptor")} />
-      <Field label="Reserve CTA" value={fields.reserve} onChange={set("reserve")} />
-      <Field label="Toggle label" value={fields.toggle} onChange={set("toggle")} />
-      <Field label="Language label" value={fields.language} onChange={set("language")} />
-      <Field label="About label" value={fields.about} onChange={set("about")} />
-      <div className="space-y-1.5">
-        <Label className="text-zinc-300 text-xs uppercase tracking-wide">Nav Links</Label>
+    <div className="space-y-4">
+      <Field
+        {...f("brandName", "Brand Name", {
+          description: "Restaurant name shown top-left.",
+        })}
+      />
+      <Field
+        {...f("brandDescriptor", "Brand Descriptor", {
+          description: "Tagline under the brand name.",
+        })}
+      />
+      <Field
+        {...f("reserve", "Reserve CTA", {
+          description: "Reservation button label in the navbar.",
+        })}
+      />
+      <Field
+        {...f("toggle", "Toggle label", {
+          description: "Mobile menu toggle accessibility label.",
+        })}
+      />
+      <Field
+        {...f("language", "Language label", {
+          description: "Language switcher label.",
+        })}
+      />
+      <Field
+        {...f("about", "About label", {
+          description: "About link label (optional).",
+        })}
+      />
+      <div>
+        <FieldLabel
+          label="Nav Links"
+          description="Translate each navigation link's display label. Keys are fixed."
+          isDirty={isFieldDirty(buffer, published, "links")}
+        />
         <div className="space-y-2">
-          {fields.links.map((link: any, i: number) => (
-            <div key={link.key} className="flex items-center gap-2">
-              <span className="text-zinc-500 text-xs w-20">{link.key}</span>
+          {links.map((link: any, i: number) => (
+            <div key={link.key} className="grid gap-1 sm:grid-cols-[5rem_minmax(0,1fr)] sm:items-center sm:gap-2">
+              <span className="text-zinc-500 text-xs">{link.key}</span>
               <Input
                 value={link.label}
                 onChange={(e) => setLink(i, e.target.value)}
@@ -149,68 +240,56 @@ function NavbarEditor({ data, locale }: { data: any; locale: Locale }) {
           ))}
         </div>
       </div>
-    </EditorShell>
+    </div>
   );
 }
 
-function StoryEditor({ data, locale }: { data: any; locale: Locale }) {
-  const upsert = useMutation(api.admin.upsertStory);
-  const [fields, setFields] = useState({
-    eyebrow: data?.eyebrow ?? "",
-    title: data?.title ?? "",
-    accent: data?.accent ?? "",
-    body1: data?.body1 ?? "",
-    body2: data?.body2 ?? "",
-    primary: data?.primary ?? "",
-    secondary: data?.secondary ?? "",
-    stat: data?.stat ?? "",
-  });
-  const set = (k: string) => (v: string) => setFields((f) => ({ ...f, [k]: v }));
-
-  async function save(status: "draft" | "published") {
-    await upsert({ locale, status, ...fields });
-    toast.success(status === "published" ? "Published" : "Saved as draft");
-  }
-
+function StoryEditor({ buffer, setBuffer, published }: EditorProps) {
+  const f = useFieldFactory(buffer, setBuffer, published);
   return (
-    <EditorShell data={data} onSave={save}>
-      <Field label="Eyebrow" value={fields.eyebrow} onChange={set("eyebrow")} />
-      <Field label="Title" value={fields.title} onChange={set("title")} />
-      <Field label="Accent" value={fields.accent} onChange={set("accent")} />
-      <Field label="Body 1" value={fields.body1} onChange={set("body1")} multiline />
-      <Field label="Body 2" value={fields.body2} onChange={set("body2")} multiline />
-      <Field label="Primary CTA" value={fields.primary} onChange={set("primary")} />
-      <Field label="Secondary CTA" value={fields.secondary} onChange={set("secondary")} />
-      <Field label="Stat label" value={fields.stat} onChange={set("stat")} />
-    </EditorShell>
+    <div className="space-y-4">
+      <Field {...f("eyebrow", "Eyebrow")} />
+      <Field {...f("title", "Title")} />
+      <Field {...f("accent", "Accent")} />
+      <Field {...f("body1", "Body 1", { multiline: true })} />
+      <Field {...f("body2", "Body 2", { multiline: true })} />
+      <Field {...f("primary", "Primary CTA")} />
+      <Field {...f("secondary", "Secondary CTA")} />
+      <Field {...f("stat", "Stat label")} />
+    </div>
   );
 }
 
-function StatsEditor({ data, locale }: { data: any; locale: Locale }) {
-  const upsert = useMutation(api.admin.upsertStats);
-  const [items, setItems] = useState<any[]>(data?.items ?? []);
-
+function StatsEditor({ buffer, setBuffer, published }: EditorProps) {
+  const items: any[] = buffer?.items ?? [];
   const setItem = (i: number, k: string, v: string | number) =>
-    setItems((prev) => prev.map((item, idx) => (idx === i ? { ...item, [k]: v } : item)));
-
-  async function save(status: "draft" | "published") {
-    await upsert({ locale, status, items });
-    toast.success(status === "published" ? "Published" : "Saved as draft");
-  }
-
+    setBuffer((b: any) => ({
+      ...b,
+      items: (b.items ?? []).map((item: any, idx: number) =>
+        idx === i ? { ...item, [k]: v } : item
+      ),
+    }));
+  const itemsDirty = isFieldDirty(buffer, published, "items");
   return (
-    <EditorShell data={data} onSave={save}>
-      <div className="space-y-4">
+    <div>
+      <FieldLabel
+        label="Stat tiles"
+        description="Each tile shows a number with a label. Edit numbers and translate labels."
+        isDirty={itemsDirty}
+      />
+      <div className="space-y-4 mt-2">
         {items.map((item, i) => (
           <div key={i} className="bg-zinc-800/50 rounded-lg p-4 space-y-3">
             <p className="text-zinc-400 text-xs">Stat {i + 1}</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label className="text-zinc-300 text-xs">Value</Label>
                 <Input
                   type="number"
                   value={item.value}
-                  onChange={(e) => setItem(i, "value", Number(e.target.value))}
+                  onChange={(e) =>
+                    setItem(i, "value", Number(e.target.value))
+                  }
                   className="bg-zinc-800 border-zinc-700 text-white"
                 />
               </div>
@@ -234,159 +313,150 @@ function StatsEditor({ data, locale }: { data: any; locale: Locale }) {
           </div>
         ))}
       </div>
-    </EditorShell>
+    </div>
   );
 }
 
-function SimpleSectionEditor({
-  data,
-  locale,
-  section,
-}: {
-  data: any;
-  locale: Locale;
-  section: string;
-}) {
-  const mutationMap: Record<string, any> = {
-    gallery: api.admin.upsertGallery,
-    meta: api.admin.upsertMeta,
-    cta: api.admin.upsertCta,
-    values: api.admin.upsertValues,
-    featured: api.admin.upsertFeatured,
-    menuPreview: api.admin.upsertMenuPreview,
-    menuPage: api.admin.upsertMenuPage,
-    footer: api.admin.upsertFooter,
-  };
-
-  const upsert = useMutation(mutationMap[section] ?? api.admin.upsertGallery);
-  const [fields, setFields] = useState<Record<string, any>>(() => {
-    if (!data) return {};
-    const { _id, _creationTime, ...rest } = data;
-    return rest;
-  });
-
-  const set = (k: string) => (v: string) => setFields((f) => ({ ...f, [k]: v }));
-
-  async function save(status: "draft" | "published") {
-    await upsert({ locale, status, ...fields } as any);
-    toast.success(status === "published" ? "Published" : "Saved as draft");
-  }
-
-  const stringFields = Object.entries(fields).filter(
-    ([k, v]) => k !== "locale" && k !== "status" && typeof v === "string"
+function SimpleSectionEditor({ buffer, setBuffer, published }: EditorProps) {
+  const set = (k: string) => (v: string) =>
+    setBuffer((b: any) => ({ ...b, [k]: v }));
+  const stringFields = Object.entries(buffer ?? {}).filter(
+    ([k, v]) =>
+      !["_id", "_creationTime", "locale", "status", "lastEditedAt"].includes(
+        k
+      ) && typeof v === "string"
   );
-
   return (
-    <EditorShell data={data} onSave={save}>
+    <div className="space-y-4">
       {stringFields.map(([k, v]) => (
         <Field
           key={k}
           label={k}
           value={v as string}
           onChange={set(k)}
-          multiline={v.length > 80}
+          multiline={(v as string).length > 80}
+          isDirty={isFieldDirty(buffer, published, k)}
         />
       ))}
       {stringFields.length === 0 && (
         <p className="text-zinc-500 text-sm">
-          This section has complex fields. Use the dedicated editor.
+          This section has complex fields not yet supported by the simple
+          editor.
         </p>
       )}
-    </EditorShell>
-  );
-}
-
-function EditorShell({
-  data,
-  onSave,
-  children,
-}: {
-  data: any;
-  onSave: (status: "draft" | "published") => Promise<void>;
-  children: React.ReactNode;
-}) {
-  const [saving, setSaving] = useState(false);
-
-  async function handle(status: "draft" | "published") {
-    setSaving(true);
-    try {
-      await onSave(status);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <Badge
-          variant={data?.status === "published" ? "default" : "secondary"}
-          className={
-            data?.status === "published"
-              ? "bg-green-900/50 text-green-400 border-green-800"
-              : "bg-zinc-800 text-zinc-400 border-zinc-700"
-          }
-        >
-          {data?.status ?? "no data"}
-        </Badge>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handle("draft")}
-            disabled={saving}
-            className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
-          >
-            Save draft
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => handle("published")}
-            disabled={saving}
-            className="bg-green-700 hover:bg-green-600 text-white"
-          >
-            Publish
-          </Button>
-        </div>
-      </div>
-      <div className="space-y-4">{children}</div>
     </div>
   );
 }
 
-function SectionEditorByType({
+type EditorProps = {
+  buffer: any;
+  setBuffer: (u: (b: any) => any) => void;
+  published: any;
+};
+
+function EditorByType({
   section,
-  data,
-  locale,
-}: {
-  section: string;
-  data: any;
-  locale: Locale;
-}) {
-  if (section === "hero") return <HeroEditor data={data} locale={locale} />;
-  if (section === "navbar") return <NavbarEditor data={data} locale={locale} />;
-  if (section === "story") return <StoryEditor data={data} locale={locale} />;
-  if (section === "stats") return <StatsEditor data={data} locale={locale} />;
-  return <SimpleSectionEditor data={data} locale={locale} section={section} />;
-}
-
-function SectionContent({ section, locale }: { section: string; locale: Locale }) {
-  const allData = useQuery(api.content.getAllSectionLocales);
-
-  if (allData === undefined) {
+  buffer,
+  setBuffer,
+  published,
+}: EditorProps & { section: Section }) {
+  if (section === "hero")
     return (
-      <div className="flex items-center justify-center h-32">
-        <div className="w-5 h-5 border-2 border-zinc-600 border-t-zinc-400 rounded-full animate-spin" />
-      </div>
+      <HeroEditor
+        buffer={buffer}
+        setBuffer={setBuffer}
+        published={published}
+      />
     );
-  }
-
-  const sectionKey = section as keyof typeof allData;
-  const entries = (allData[sectionKey] as any[]) ?? [];
-  const data = entries.find((e) => e.locale === locale) ?? null;
-
-  return <SectionEditorByType key={locale} section={section} data={data} locale={locale} />;
+  if (section === "navbar")
+    return (
+      <NavbarEditor
+        buffer={buffer}
+        setBuffer={setBuffer}
+        published={published}
+      />
+    );
+  if (section === "story")
+    return (
+      <StoryEditor
+        buffer={buffer}
+        setBuffer={setBuffer}
+        published={published}
+      />
+    );
+  if (section === "stats")
+    return (
+      <StatsEditor
+        buffer={buffer}
+        setBuffer={setBuffer}
+        published={published}
+      />
+    );
+  return (
+    <SimpleSectionEditor
+      buffer={buffer}
+      setBuffer={setBuffer}
+      published={published}
+    />
+  );
 }
+
+// ─── Workspace (per locale) ───────────────────────────────────────────────
+
+function stripMeta(obj: any): any {
+  if (!obj) return null;
+  const rest = { ...obj };
+  delete rest._id;
+  delete rest._creationTime;
+  delete rest.locale;
+  delete rest.status;
+  delete rest.lastEditedAt;
+  return rest;
+}
+
+function SectionWorkspace({
+  section,
+  locale,
+  draft,
+  published,
+}: {
+  section: Section;
+  locale: Locale;
+  draft: any;
+  published: any;
+}) {
+  // Buffer initialises from the existing draft if any, else the published row,
+  // else an empty object. Keyed-on-locale parent ensures this mounts fresh per
+  // locale switch.
+  const initial = stripMeta(draft) ?? stripMeta(published) ?? {};
+  const [buffer, setBuffer] = useState<any>(initial);
+
+  const publishedFields = stripMeta(published);
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col xl:flex-row">
+      <main className="min-h-0 flex-1 overflow-y-auto">
+        <div className="max-w-2xl p-4 sm:p-6 lg:p-8">
+          <EditorByType
+            section={section}
+            buffer={buffer}
+            setBuffer={setBuffer}
+            published={publishedFields}
+          />
+        </div>
+      </main>
+      <VersionPanel
+        section={section}
+        locale={locale}
+        buffer={buffer}
+        draft={draft}
+        published={published}
+      />
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────
 
 export default function SectionPage({
   params,
@@ -395,35 +465,60 @@ export default function SectionPage({
 }) {
   const { section } = use(params);
   const [locale, setLocale] = useState<Locale>("en");
+  const allData = useQuery(api.content.getAdminSections);
+
+  const sectionTyped = section as Section;
+  const localeBucket = allData?.[sectionTyped]?.[locale] ?? {
+    draft: null,
+    published: null,
+  };
 
   return (
     <>
       <Toaster />
-      <div className="p-8 max-w-2xl">
-        <div className="mb-6">
-          <p className="text-xs text-zinc-500 uppercase tracking-widest mb-1">Sections</p>
+      <div className="flex h-full min-h-0 flex-col overflow-hidden">
+        <header className="shrink-0 border-b border-zinc-800 px-4 py-4 sm:px-6 lg:px-8 lg:pt-8 lg:pb-5">
+          <p className="text-xs text-zinc-500 uppercase tracking-widest mb-1">
+            Sections
+          </p>
           <h1 className="text-xl font-semibold text-white">
             {SECTION_LABELS[section] ?? section}
           </h1>
-        </div>
+          {SECTION_HINTS[section] && (
+            <p className="text-sm text-zinc-500 mt-1">
+              {SECTION_HINTS[section]}
+            </p>
+          )}
+          <div className="mt-4">
+            <Tabs value={locale} onValueChange={(v) => setLocale(v as Locale)}>
+              <TabsList className="max-w-full justify-start overflow-x-auto bg-zinc-800 border border-zinc-700">
+                {LOCALES.map((l) => (
+                  <TabsTrigger
+                    key={l.code}
+                    value={l.code}
+                    className="shrink-0 data-[state=active]:bg-zinc-700 data-[state=active]:text-white text-zinc-400"
+                  >
+                    {l.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          </div>
+        </header>
 
-        <div className="mb-6">
-          <Tabs value={locale} onValueChange={(v) => setLocale(v as Locale)}>
-            <TabsList className="bg-zinc-800 border border-zinc-700">
-              {LOCALES.map((l) => (
-                <TabsTrigger
-                  key={l.code}
-                  value={l.code}
-                  className="data-[state=active]:bg-zinc-700 data-[state=active]:text-white text-zinc-400"
-                >
-                  {l.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-        </div>
-
-        <SectionContent section={section} locale={locale} />
+        {allData === undefined ? (
+          <div className="flex items-center justify-center h-32">
+            <div className="w-5 h-5 border-2 border-zinc-600 border-t-zinc-400 rounded-full animate-spin" />
+          </div>
+        ) : (
+          <SectionWorkspace
+            key={locale}
+            section={sectionTyped}
+            locale={locale}
+            draft={localeBucket.draft}
+            published={localeBucket.published}
+          />
+        )}
       </div>
     </>
   );
