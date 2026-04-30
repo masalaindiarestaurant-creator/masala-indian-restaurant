@@ -385,7 +385,7 @@ function SectionContent({ section, locale }: { section: string; locale: Locale }
   const entries = (allData[sectionKey] as any[]) ?? [];
   const data = entries.find((e) => e.locale === locale) ?? null;
 
-  return <SectionEditorByType section={section} data={data} locale={locale} />;
+  return <SectionEditorByType key={locale} section={section} data={data} locale={locale} />;
 }
 
 export default function SectionPage({
