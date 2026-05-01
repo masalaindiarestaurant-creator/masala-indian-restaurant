@@ -14,7 +14,7 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
 
         const email = String(params.email ?? "").trim().toLowerCase();
         if (email !== adminEmail) {
-          throw new Error("Unauthorized");
+          throw new Error("Invalid credentials");
         }
 
         return { email, name: "Masala Admin" };
