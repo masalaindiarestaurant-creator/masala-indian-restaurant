@@ -187,7 +187,7 @@ export function VersionPanel({
           onClick={handleSaveDraft}
           disabled={busy || dirtyCount === 0}
           variant="outline"
-          className="flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+          className="flex-1 border-zinc-600 bg-zinc-900 text-zinc-100 hover:bg-zinc-800 hover:text-white focus-visible:ring-zinc-500/25"
         >
           Save draft
         </Button>
@@ -222,7 +222,7 @@ export function VersionPanel({
             onClick={handleSaveDraft}
             disabled={busy || dirtyCount === 0}
             variant="outline"
-            className="w-full border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+            className="w-full border-zinc-600 bg-zinc-900 text-zinc-100 hover:bg-zinc-800 hover:text-white focus-visible:ring-zinc-500/25"
           >
             Save draft
           </Button>
@@ -316,7 +316,7 @@ export function VersionPanel({
                     variant="outline"
                     disabled={busy}
                     onClick={() => handleRestore(r._id)}
-                    className="h-7 text-[11px] border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                    className="h-7 border-zinc-600 bg-zinc-900 text-[11px] font-medium text-zinc-100 hover:bg-zinc-800 hover:text-white focus-visible:ring-zinc-500/25"
                   >
                     Restore
                   </Button>

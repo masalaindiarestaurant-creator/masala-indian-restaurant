@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import ConsoleBrand from "@/components/ConsoleBrand";
 import EntryTransition from "@/components/EntryTransition";
 import MotionProvider from "@/components/MotionProvider";
@@ -22,7 +23,6 @@ export default function RootLayout({
   return (
     <html lang="en" className="font-sans" data-scroll-behavior="smooth">
       <head>
-        <script dangerouslySetInnerHTML={{__html:`(function(){try{if(!sessionStorage.getItem('masala-entry-transition-complete')){var s=document.createElement('style');s.id='entry-block';s.textContent='body{visibility:hidden}';document.head.appendChild(s);}}catch(e){}})();`}} />
         <noscript><style>{`body{visibility:visible!important}`}</style></noscript>
         <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -34,6 +34,14 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className="bg-page text-ink font-body antialiased">
+        <Script
+          id="masala-entry-block-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{if(!sessionStorage.getItem('masala-entry-transition-complete')){var s=document.createElement('style');s.id='entry-block';s.textContent='body{visibility:hidden}';document.head.appendChild(s);}}catch(e){}})();",
+          }}
+        />
         <div
           aria-hidden="true"
           style={{ display: "none" }}
