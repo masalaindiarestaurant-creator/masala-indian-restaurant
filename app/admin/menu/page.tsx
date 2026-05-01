@@ -55,6 +55,35 @@ function formatPrice(value: unknown) {
   return typeof value === "number" ? value.toFixed(2) : "";
 }
 
+function CategoryPill({
+  category,
+  locale,
+  selected,
+  onSelect,
+}: {
+  category: any;
+  locale: Locale;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const catData = useQuery(api.menu.getCategoryWithContent, {
+    categoryId: category._id as Id<"menuCategories">,
+  });
+  const content = catData?.contents.find((c: any) => c.locale === locale);
+  return (
+    <button
+      onClick={onSelect}
+      className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs transition-colors ${
+        selected
+          ? "border-zinc-200 bg-zinc-100 text-zinc-950"
+          : "border-zinc-700 bg-zinc-800/50 text-zinc-300 hover:bg-zinc-800 hover:text-white"
+      }`}
+    >
+      {content?.label ?? category.slug}
+    </button>
+  );
+}
+
 function CategoryRow({
   category,
   locale,
@@ -519,12 +548,65 @@ function CategoryDetailLoaded({
   catData: NonNullable<ReturnType<typeof useQuery<typeof api.menu.getCategoryWithContent>>>;
 }) {
   const upsertCatContent = useMutation(api.admin.upsertMenuCategoryContent);
+  const upsertCategory = useMutation(api.admin.upsertMenuCategory);
+  const generateUploadUrl = useMutation(api.admin.generateUploadUrl);
   const content = catData.contents.find((c: any) => c.locale === locale);
   const [catFields, setCatFields] = useState({
     label: content?.label ?? "",
     description: content?.description ?? "",
   });
+  const [bannerFields, setBannerFields] = useState({
+    bannerImage: catData.bannerImage ?? "",
+    bannerImageId: catData.bannerImageId as Id<"_storage"> | undefined,
+  });
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const [bannerBusy, setBannerBusy] = useState(false);
+  const [bannerUploading, setBannerUploading] = useState(false);
   const [showNewItem, setShowNewItem] = useState(false);
+
+  async function uploadBanner(file: File) {
+    setBannerUploading(true);
+    try {
+      const uploadUrl = await generateUploadUrl();
+      const response = await fetch(uploadUrl, {
+        method: "POST",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!response.ok) throw new Error("Upload failed");
+      const { storageId } = await response.json();
+      setBannerFields((fields) => ({
+        ...fields,
+        bannerImageId: storageId as Id<"_storage">,
+      }));
+      setBannerPreview(URL.createObjectURL(file));
+      toast.success("Banner uploaded. Save banner to attach it.");
+    } catch (error: any) {
+      toast.error(error?.message ?? "Banner upload failed");
+    } finally {
+      setBannerUploading(false);
+    }
+  }
+
+  async function saveBanner() {
+    setBannerBusy(true);
+    try {
+      await upsertCategory({
+        id: categoryId,
+        slug: catData.slug,
+        order: catData.order,
+        variant: catData.variant,
+        bannerImage: bannerFields.bannerImage.trim() || undefined,
+        bannerImageId: bannerFields.bannerImageId,
+      });
+      toast.success("Banner saved");
+      setBannerPreview(null);
+    } catch (error: any) {
+      toast.error(error?.message ?? "Failed to save banner");
+    } finally {
+      setBannerBusy(false);
+    }
+  }
 
   async function saveCat(status: "draft" | "published") {
     await upsertCatContent({
@@ -537,8 +619,76 @@ function CategoryDetailLoaded({
     toast.success(status === "published" ? "Published" : "Saved as draft");
   }
 
+  const bannerSrc = bannerPreview ?? bannerFields.bannerImage;
+
   return (
     <div className="space-y-6">
+      <div className="bg-zinc-800 rounded-lg p-4 space-y-4 sm:p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-sm font-medium text-white">Showcase Image</h3>
+          <p className="text-[11px] text-zinc-500">Locale-independent</p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-[160px_minmax(0,1fr)]">
+          <div className="aspect-[4/3] overflow-hidden rounded-md border border-zinc-700 bg-zinc-900 flex items-center justify-center">
+            {bannerSrc ? (
+              <div
+                className="h-full w-full bg-cover bg-center"
+                style={{ backgroundImage: `url("${bannerSrc}")` }}
+              />
+            ) : (
+              <ImagePlus className="size-7 text-zinc-600" />
+            )}
+          </div>
+
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label className="text-zinc-300 text-xs uppercase tracking-wide">
+                Image URL
+              </Label>
+              <Input
+                value={bannerFields.bannerImage}
+                onChange={(event) =>
+                  setBannerFields((fields) => ({
+                    ...fields,
+                    bannerImage: event.target.value,
+                  }))
+                }
+                placeholder="/images/menu-image/butter-chicken.png"
+                className="bg-zinc-800 border-zinc-700 text-white"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Label className="flex h-8 cursor-pointer items-center justify-center gap-1 rounded-md border border-zinc-700 px-3 text-xs text-zinc-300 hover:bg-zinc-800">
+                <Upload className="size-3" />
+                {bannerUploading ? "Uploading" : "Upload image"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  disabled={bannerUploading}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) void uploadBanner(file);
+                    event.target.value = "";
+                  }}
+                />
+              </Label>
+              <Button
+                size="sm"
+                onClick={() => saveBanner()}
+                disabled={bannerBusy || bannerUploading}
+                className="h-8 text-xs bg-zinc-100 text-zinc-950 hover:bg-white"
+              >
+                <Save className="size-3" />
+                Save banner
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-zinc-800 rounded-lg p-4 space-y-4 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-medium text-white">Category Content</h3>
@@ -645,7 +795,7 @@ export default function MenuAdminPage() {
           </div>
 
           <Tabs value={locale} onValueChange={(v) => setLocale(v as Locale)}>
-            <TabsList className="max-w-full justify-start overflow-x-auto bg-zinc-800 border border-zinc-700">
+            <TabsList className="no-scrollbar max-w-full justify-start overflow-x-auto bg-zinc-800 border border-zinc-700">
               {LOCALES.map((l) => (
                 <TabsTrigger
                   key={l.code}
@@ -664,33 +814,55 @@ export default function MenuAdminPage() {
             <div className="w-5 h-5 border-2 border-zinc-600 border-t-zinc-400 rounded-full animate-spin" />
           </div>
         ) : (
-          <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto p-4 sm:gap-6 sm:p-6 lg:p-8 xl:grid-cols-[280px_minmax(0,1fr)] xl:grid-rows-[minmax(0,1fr)] xl:overflow-hidden">
-            <div className="max-h-72 min-h-0 min-w-0 space-y-2 overflow-y-auto overscroll-contain pr-1 xl:max-h-none">
-              {categories.map((cat: any) => (
-                <CategoryRow
-                  key={cat._id}
-                  category={cat}
-                  locale={locale}
-                  selected={selectedId === cat._id}
-                  onSelect={() => setSelectedId(cat._id)}
-                />
-              ))}
-            </div>
-
-            <div className="min-h-0 min-w-0 xl:overflow-y-auto xl:overscroll-contain">
-              {selectedId ? (
-                <CategoryDetail
-                  key={`${selectedId}-${locale}`}
-                  categoryId={selectedId}
-                  locale={locale}
-                />
-              ) : (
-                <div className="flex items-center justify-center h-40 text-zinc-500 text-sm">
-                  Select a category to edit
+          <>
+            {selectedId && (
+              <div className="z-10 shrink-0 border-b border-zinc-800 bg-zinc-900/95 backdrop-blur xl:hidden">
+                <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 py-3 sm:px-6 lg:px-8">
+                  {categories.map((cat: any) => (
+                    <CategoryPill
+                      key={cat._id}
+                      category={cat}
+                      locale={locale}
+                      selected={selectedId === cat._id}
+                      onSelect={() => setSelectedId(cat._id)}
+                    />
+                  ))}
                 </div>
-              )}
+              </div>
+            )}
+
+            <div className="no-scrollbar grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto p-4 sm:gap-6 sm:p-6 lg:p-8 xl:grid-cols-[280px_minmax(0,1fr)] xl:grid-rows-[minmax(0,1fr)] xl:overflow-hidden">
+              <div
+                className={`no-scrollbar min-h-0 min-w-0 space-y-2 overflow-y-auto overscroll-contain pr-1 xl:block xl:max-h-none ${
+                  selectedId ? "hidden xl:block" : "max-h-[60vh]"
+                }`}
+              >
+                {categories.map((cat: any) => (
+                  <CategoryRow
+                    key={cat._id}
+                    category={cat}
+                    locale={locale}
+                    selected={selectedId === cat._id}
+                    onSelect={() => setSelectedId(cat._id)}
+                  />
+                ))}
+              </div>
+
+              <div className="no-scrollbar min-h-0 min-w-0 xl:overflow-y-auto xl:overscroll-contain">
+                {selectedId ? (
+                  <CategoryDetail
+                    key={`${selectedId}-${locale}`}
+                    categoryId={selectedId}
+                    locale={locale}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-40 text-zinc-500 text-sm">
+                    Select a category to edit
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          </>
         )}
       </div>
     </>

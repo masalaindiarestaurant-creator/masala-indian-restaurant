@@ -1,5 +1,6 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAdmin } from "./authz";
 
 const locale = v.union(
   v.literal("en"),
@@ -173,6 +174,7 @@ const SECTION_TABLES = [
 export const getAdminSections = query({
   args: {},
   handler: async (ctx) => {
+    await requireAdmin(ctx);
     /* eslint-disable @typescript-eslint/no-explicit-any */
     const db = ctx.db as any;
     const result: Record<string, Record<string, { draft: any; published: any }>> = {};
@@ -197,6 +199,7 @@ export const getAdminSections = query({
 export const getAllSectionLocales = query({
   args: {},
   handler: async (ctx) => {
+    await requireAdmin(ctx);
     const [
       meta,
       navbar,

@@ -1,6 +1,7 @@
 import { mutation } from "./_generated/server";
 import { v } from "convex/values";
 import type { MutationCtx } from "./_generated/server";
+import { requireAdmin } from "./authz";
 
 const locale = v.union(
   v.literal("en"),
@@ -52,6 +53,7 @@ async function saveDraftRow(
   localeVal: string,
   data: Record<string, unknown>
 ) {
+  await requireAdmin(ctx);
   const db = ctx.db as any;
   const existing = await db
     .query(table)
@@ -79,6 +81,7 @@ async function publishRow(
   table: string,
   localeVal: string
 ) {
+  await requireAdmin(ctx);
   const db = ctx.db as any;
   const draft = await db
     .query(table)
@@ -129,6 +132,7 @@ async function discardDraftRow(
   table: string,
   localeVal: string
 ) {
+  await requireAdmin(ctx);
   const db = ctx.db as any;
   const draft = await db
     .query(table)
@@ -429,6 +433,7 @@ export const discardDraft = mutation({
 export const restoreRevision = mutation({
   args: { revisionId: v.id("contentRevisions") },
   handler: async (ctx, { revisionId }) => {
+    await requireAdmin(ctx);
     const db = ctx.db as any;
     const revision = await db.get(revisionId);
     if (!revision) throw new Error("Revision not found");
@@ -445,6 +450,37 @@ export const restoreRevision = mutation({
 
 const status = v.union(v.literal("draft"), v.literal("published"));
 
+export const upsertMenuCategory = mutation({
+  args: {
+    id: v.id("menuCategories"),
+    slug: v.string(),
+    order: v.number(),
+    variant: v.optional(
+      v.union(
+        v.literal("default"),
+        v.literal("special"),
+        v.literal("chef"),
+        v.literal("tandoori"),
+        v.literal("biryani")
+      )
+    ),
+    bannerImage: v.optional(v.string()),
+    bannerImageId: v.optional(v.id("_storage")),
+  },
+  handler: async (ctx, { id, bannerImage, bannerImageId, ...data }) => {
+    await requireAdmin(ctx);
+    const resolvedBanner = bannerImageId
+      ? await ctx.storage.getUrl(bannerImageId)
+      : null;
+    await ctx.db.patch(id, {
+      ...data,
+      bannerImage: resolvedBanner ?? bannerImage,
+      bannerImageId,
+    });
+    return id;
+  },
+});
+
 export const upsertMenuCategoryContent = mutation({
   args: {
     categoryId: v.id("menuCategories"),
@@ -454,6 +490,7 @@ export const upsertMenuCategoryContent = mutation({
     description: v.optional(v.string()),
   },
   handler: async (ctx, { categoryId, locale, ...data }) => {
+    await requireAdmin(ctx);
     const existing = await ctx.db
       .query("menuCategoryContent")
       .withIndex("by_category_locale", (q) =>
@@ -482,6 +519,7 @@ export const upsertMenuItemContent = mutation({
     note: v.optional(v.string()),
   },
   handler: async (ctx, { itemId, locale, ...data }) => {
+    await requireAdmin(ctx);
     const existing = await ctx.db
       .query("menuItemContent")
       .withIndex("by_item_locale", (q) =>
@@ -523,6 +561,7 @@ export const upsertMenuItem = mutation({
     order: v.number(),
   },
   handler: async (ctx, { id, image, imageId, ...data }) => {
+    await requireAdmin(ctx);
     const resolvedImage = imageId ? await ctx.storage.getUrl(imageId) : null;
     const payload = {
       ...data,
@@ -541,6 +580,7 @@ export const upsertMenuItem = mutation({
 export const generateUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {
+    await requireAdmin(ctx);
     return ctx.storage.generateUploadUrl();
   },
 });
@@ -549,6 +589,7 @@ export const generateUploadUrl = mutation({
 export const publishSection = mutation({
   args: { table: v.string(), id: v.string() },
   handler: async (ctx, { id }) => {
+    await requireAdmin(ctx);
     // @ts-expect-error dynamic
     await ctx.db.patch(id, { status: "published" });
   },
@@ -557,6 +598,7 @@ export const publishSection = mutation({
 export const unpublishSection = mutation({
   args: { table: v.string(), id: v.string() },
   handler: async (ctx, { id }) => {
+    await requireAdmin(ctx);
     // @ts-expect-error dynamic
     await ctx.db.patch(id, { status: "draft" });
   },

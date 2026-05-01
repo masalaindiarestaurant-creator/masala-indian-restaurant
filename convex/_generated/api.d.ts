@@ -9,7 +9,10 @@
  */
 
 import type * as admin from "../admin.js";
+import type * as auth from "../auth.js";
+import type * as authz from "../authz.js";
 import type * as content from "../content.js";
+import type * as http from "../http.js";
 import type * as menu from "../menu.js";
 import type * as migrations from "../migrations.js";
 import type * as revisions from "../revisions.js";
@@ -23,7 +26,10 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
+  auth: typeof auth;
+  authz: typeof authz;
   content: typeof content;
+  http: typeof http;
   menu: typeof menu;
   migrations: typeof migrations;
   revisions: typeof revisions;

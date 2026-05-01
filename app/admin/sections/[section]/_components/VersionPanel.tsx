@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
+import { ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { computeDiff, formatRelativeTime, formatPreview } from "./diff";
 import { PublishConfirmDialog } from "./PublishConfirmDialog";
@@ -73,6 +74,7 @@ export function VersionPanel({
 
   const [busy, setBusy] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const publishedFields = stripMeta(published);
   const diff = computeDiff(buffer, publishedFields);
@@ -148,9 +150,56 @@ export function VersionPanel({
 
   return (
     <aside className="min-h-0 shrink-0 border-t border-zinc-800 bg-zinc-950/95 backdrop-blur xl:w-80 xl:overflow-y-auto xl:border-l xl:border-t-0">
-      <div className="space-y-5 p-4 sm:p-5">
-        {/* Status */}
-        <div>
+      {/* Compact mobile header — collapsed default */}
+      <button
+        type="button"
+        onClick={() => setExpanded((value) => !value)}
+        aria-expanded={expanded}
+        className="flex w-full items-center gap-3 px-4 py-3 text-left xl:hidden"
+      >
+        <div className="min-w-0 flex-1">
+          <p className={`truncate text-sm font-medium ${statusColor}`}>
+            {statusLabel}
+          </p>
+          <p className="text-[11px] text-zinc-500">
+            Last edited {formatRelativeTime(lastEdited)}
+          </p>
+        </div>
+        <ChevronDown
+          className={`size-4 shrink-0 text-zinc-400 transition-transform ${
+            expanded ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {/* Mobile sticky action bar — always visible */}
+      <div className="flex gap-2 px-4 pb-3 xl:hidden">
+        <Button
+          size="sm"
+          onClick={() => setConfirmOpen(true)}
+          disabled={busy || dirtyCount === 0}
+          className="flex-1 bg-green-700 hover:bg-green-600 text-white"
+        >
+          Publish
+        </Button>
+        <Button
+          size="sm"
+          onClick={handleSaveDraft}
+          disabled={busy || dirtyCount === 0}
+          variant="outline"
+          className="flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+        >
+          Save draft
+        </Button>
+      </div>
+
+      <div
+        className={`space-y-5 p-4 sm:p-5 ${
+          expanded ? "block border-t border-zinc-800 xl:border-t-0" : "hidden xl:block"
+        }`}
+      >
+        {/* Status — desktop only (mobile shows in compact header) */}
+        <div className="hidden xl:block">
           <p className="text-xs text-zinc-500 uppercase tracking-widest mb-1">
             Status
           </p>
@@ -160,8 +209,8 @@ export function VersionPanel({
           </p>
         </div>
 
-        {/* Actions */}
-        <div className="grid gap-2 sm:grid-cols-3 xl:grid-cols-1">
+        {/* Actions — desktop only (mobile shows in sticky bar) */}
+        <div className="hidden gap-2 xl:grid xl:grid-cols-1">
           <Button
             onClick={() => setConfirmOpen(true)}
             disabled={busy || dirtyCount === 0}
@@ -186,6 +235,17 @@ export function VersionPanel({
             Discard draft
           </Button>
         </div>
+
+        {/* Discard button on mobile (inside expanded body) */}
+        <Button
+          onClick={handleDiscard}
+          disabled={busy || !draft}
+          variant="ghost"
+          size="sm"
+          className="w-full text-zinc-400 hover:text-red-300 hover:bg-red-950/30 xl:hidden"
+        >
+          Discard draft
+        </Button>
 
         {/* Per-field diff */}
         <div>

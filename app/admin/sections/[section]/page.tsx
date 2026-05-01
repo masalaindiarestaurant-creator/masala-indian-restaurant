@@ -491,7 +491,7 @@ export default function SectionPage({
           )}
           <div className="mt-4">
             <Tabs value={locale} onValueChange={(v) => setLocale(v as Locale)}>
-              <TabsList className="max-w-full justify-start overflow-x-auto bg-zinc-800 border border-zinc-700">
+              <TabsList className="no-scrollbar max-w-full justify-start overflow-x-auto bg-zinc-800 border border-zinc-700">
                 {LOCALES.map((l) => (
                   <TabsTrigger
                     key={l.code}

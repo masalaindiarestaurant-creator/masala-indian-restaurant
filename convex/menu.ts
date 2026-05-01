@@ -1,5 +1,6 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAdmin } from "./authz";
 
 const locale = v.union(
   v.literal("en"),
@@ -55,8 +56,13 @@ export const getCategories = query({
           })
         );
 
+        const bannerFromStorage = cat.bannerImageId
+          ? await ctx.storage.getUrl(cat.bannerImageId)
+          : null;
+
         return {
           ...cat,
+          bannerImage: bannerFromStorage ?? cat.bannerImage,
           label: content?.label ?? "",
           description: content?.description,
           items: localizedItems,
@@ -69,16 +75,33 @@ export const getCategories = query({
 export const getAllCategoriesAdmin = query({
   args: {},
   handler: async (ctx) => {
+    await requireAdmin(ctx);
     const categories = await ctx.db.query("menuCategories").collect();
-    return categories.sort((a, b) => a.order - b.order);
+    const sorted = categories.sort((a, b) => a.order - b.order);
+    return Promise.all(
+      sorted.map(async (cat) => {
+        const bannerFromStorage = cat.bannerImageId
+          ? await ctx.storage.getUrl(cat.bannerImageId)
+          : null;
+        return {
+          ...cat,
+          bannerImage: bannerFromStorage ?? cat.bannerImage,
+        };
+      })
+    );
   },
 });
 
 export const getCategoryWithContent = query({
   args: { categoryId: v.id("menuCategories") },
   handler: async (ctx, { categoryId }) => {
+    await requireAdmin(ctx);
     const category = await ctx.db.get(categoryId);
     if (!category) return null;
+
+    const bannerFromStorage = category.bannerImageId
+      ? await ctx.storage.getUrl(category.bannerImageId)
+      : null;
 
     const contents = await ctx.db
       .query("menuCategoryContent")
@@ -109,6 +132,11 @@ export const getCategoryWithContent = query({
       })
     );
 
-    return { ...category, contents, items: itemsWithContent };
+    return {
+      ...category,
+      bannerImage: bannerFromStorage ?? category.bannerImage,
+      contents,
+      items: itemsWithContent,
+    };
   },
 });

@@ -1,4 +1,5 @@
 import { defineSchema, defineTable } from "convex/server";
+import { authTables } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 
 const locale = v.union(
@@ -12,6 +13,8 @@ const locale = v.union(
 const status = v.union(v.literal("draft"), v.literal("published"));
 
 export default defineSchema({
+  ...authTables,
+
   // ─── Assets ───────────────────────────────────────────────────────────────
 
   assets: defineTable({
