@@ -22,7 +22,7 @@ const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 function AdminAuthLoadingSkeleton() {
   return (
-    <div className="fixed inset-0 z-50 flex overflow-hidden bg-zinc-900 text-white">
+    <div className="dark fixed inset-0 z-50 flex overflow-hidden bg-zinc-900 text-white">
       <div className="fixed inset-y-0 left-0 z-40 hidden lg:block">
         <aside className="flex h-full w-64 flex-col border-r border-zinc-800 bg-zinc-950 px-6 py-5">
           <Skeleton className="h-3 w-20 rounded bg-zinc-800" />
@@ -221,19 +221,19 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   return (
     <ConvexAuthNextjsProvider client={convex}>
       {isLoginRoute ? (
-        children
+        <div className="dark min-h-screen">{children}</div>
       ) : (
         <>
           <AuthLoading>
             <AdminAuthLoadingSkeleton />
           </AuthLoading>
           <Unauthenticated>
-            <div className="grid min-h-screen place-items-center bg-zinc-950 text-sm text-zinc-400">
+            <div className="dark grid min-h-screen place-items-center bg-zinc-950 text-sm text-zinc-400">
               Redirecting to sign in...
             </div>
           </Unauthenticated>
           <Authenticated>
-            <div className="fixed inset-0 flex overflow-hidden bg-zinc-900 text-white">
+            <div className="dark fixed inset-0 flex overflow-hidden bg-zinc-900 text-white">
               <div className="fixed inset-y-0 left-0 z-40 hidden lg:block">
                 <Sidebar />
               </div>
